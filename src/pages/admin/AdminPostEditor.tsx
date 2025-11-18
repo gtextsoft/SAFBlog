@@ -50,6 +50,10 @@ const AdminPostEditor = () => {
   const [newAuthorBio, setNewAuthorBio] = useState("");
   const [showCreateAuthorDialog, setShowCreateAuthorDialog] = useState(false);
   const [creatingAuthor, setCreatingAuthor] = useState(false);
+  const [newCategoryNames, setNewCategoryNames] = useState("");
+  const [showCreateCategoryDialog, setShowCreateCategoryDialog] = useState(false);
+  const [creatingCategory, setCreatingCategory] = useState(false);
+  const [newTagNames, setNewTagNames] = useState("");
   const { toast } = useToast();
 
   // Form state
@@ -293,6 +297,194 @@ const AdminPostEditor = () => {
       });
     } finally {
       setCreatingTag(false);
+    }
+  };
+
+  const handleCreateMultipleTags = async () => {
+    if (!newTagNames.trim()) {
+      toast({
+        title: "Tag names required",
+        description: "Please enter tag names separated by commas.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Parse comma-separated tags
+    const tagNames = newTagNames
+      .split(",")
+      .map((name) => name.trim())
+      .filter((name) => name.length > 0);
+
+    if (tagNames.length === 0) {
+      toast({
+        title: "Invalid input",
+        description: "Please enter at least one valid tag name.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setCreatingTag(true);
+
+    try {
+      const newTags: Tag[] = [];
+      const tagsToSelect: string[] = [];
+
+      for (const tagName of tagNames) {
+        const tagSlug = generateSlug(tagName);
+
+        // Check if tag already exists
+        const existingTag = tags.find(
+          (tag) => tag.name.toLowerCase() === tagName.toLowerCase() || tag.slug === tagSlug
+        );
+
+        if (existingTag) {
+          // If exists, just select it
+          if (!selectedTags.includes(existingTag.id)) {
+            tagsToSelect.push(existingTag.id);
+          }
+          continue;
+        }
+
+        // Create new tag
+        const { data: newTag, error } = await supabase
+          .from("tags")
+          .insert({
+            name: tagName,
+            slug: tagSlug,
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        newTags.push(newTag);
+        tagsToSelect.push(newTag.id);
+      }
+
+      // Update tags list
+      if (newTags.length > 0) {
+        setTags((prev) => [...prev, ...newTags].sort((a, b) => a.name.localeCompare(b.name)));
+      }
+
+      // Select all new/existing tags
+      if (tagsToSelect.length > 0) {
+        setSelectedTags((prev) => [...prev, ...tagsToSelect].filter((id, index, self) => self.indexOf(id) === index));
+      }
+
+      toast({
+        title: "Tags created",
+        description: `Created ${newTags.length} new tag(s) and added ${tagsToSelect.length} tag(s) to this post.`,
+      });
+
+      setNewTagNames("");
+      setShowCreateTagDialog(false);
+    } catch (error) {
+      console.error("Create tags error:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to create tags.";
+      toast({
+        title: "Create tags failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setCreatingTag(false);
+    }
+  };
+
+  const handleCreateMultipleCategories = async () => {
+    if (!newCategoryNames.trim()) {
+      toast({
+        title: "Category names required",
+        description: "Please enter category names separated by commas.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Parse comma-separated categories
+    const categoryNames = newCategoryNames
+      .split(",")
+      .map((name) => name.trim())
+      .filter((name) => name.length > 0);
+
+    if (categoryNames.length === 0) {
+      toast({
+        title: "Invalid input",
+        description: "Please enter at least one valid category name.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setCreatingCategory(true);
+
+    try {
+      const newCategories: Category[] = [];
+      const categoriesToSelect: string[] = [];
+
+      for (const categoryName of categoryNames) {
+        const categorySlug = generateSlug(categoryName);
+
+        // Check if category already exists
+        const existingCategory = categories.find(
+          (cat) => cat.name.toLowerCase() === categoryName.toLowerCase() || cat.slug === categorySlug
+        );
+
+        if (existingCategory) {
+          // If exists, just select it
+          if (!selectedCategories.includes(existingCategory.id)) {
+            categoriesToSelect.push(existingCategory.id);
+          }
+          continue;
+        }
+
+        // Create new category
+        const { data: newCategory, error } = await supabase
+          .from("categories")
+          .insert({
+            name: categoryName,
+            slug: categorySlug,
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        newCategories.push(newCategory);
+        categoriesToSelect.push(newCategory.id);
+      }
+
+      // Update categories list
+      if (newCategories.length > 0) {
+        setCategories((prev) => [...prev, ...newCategories].sort((a, b) => a.name.localeCompare(b.name)));
+      }
+
+      // Select all new/existing categories
+      if (categoriesToSelect.length > 0) {
+        setSelectedCategories((prev) => [...prev, ...categoriesToSelect].filter((id, index, self) => self.indexOf(id) === index));
+      }
+
+      toast({
+        title: "Categories created",
+        description: `Created ${newCategories.length} new category/categories and added ${categoriesToSelect.length} category/categories to this post.`,
+      });
+
+      setNewCategoryNames("");
+      setShowCreateCategoryDialog(false);
+    } catch (error) {
+      console.error("Create categories error:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to create categories.";
+      toast({
+        title: "Create categories failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setCreatingCategory(false);
     }
   };
 
@@ -897,10 +1089,58 @@ const AdminPostEditor = () => {
 
               {/* Categories */}
               <div className="space-y-2">
-                <Label>Categories</Label>
+                <div className="flex items-center justify-between">
+                  <Label>Categories</Label>
+                  <Dialog open={showCreateCategoryDialog} onOpenChange={setShowCreateCategoryDialog}>
+                    <DialogTrigger asChild>
+                      <Button type="button" variant="outline" size="sm">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Categories
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>Create Categories</DialogTitle>
+                        <DialogDescription>
+                          Add one or more categories separated by commas. Existing categories will be selected automatically.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="new-category-names">Category Names *</Label>
+                          <Textarea
+                            id="new-category-names"
+                            value={newCategoryNames}
+                            onChange={(e) => setNewCategoryNames(e.target.value)}
+                            placeholder="e.g., Technology, Health, Finance, Education"
+                            rows={3}
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            Separate multiple categories with commas (e.g., Technology, Health, Finance)
+                          </p>
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setShowCreateCategoryDialog(false);
+                            setNewCategoryNames("");
+                          }}
+                          disabled={creatingCategory}
+                        >
+                          Cancel
+                        </Button>
+                        <Button onClick={handleCreateMultipleCategories} disabled={creatingCategory || !newCategoryNames.trim()}>
+                          {creatingCategory ? "Creating..." : "Create Categories"}
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </div>
                 <div className="flex flex-wrap gap-2 p-4 border rounded-lg min-h-[60px]">
                   {categories.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">No categories available</p>
+                    <p className="text-sm text-muted-foreground">No categories available. Create your first category!</p>
                   ) : (
                     categories.map((category) => (
                       <div key={category.id} className="flex items-center space-x-2">
@@ -929,33 +1169,28 @@ const AdminPostEditor = () => {
                     <DialogTrigger asChild>
                       <Button type="button" variant="outline" size="sm">
                         <Plus className="h-4 w-4 mr-2" />
-                        Add New Tag
+                        Add Tags
                       </Button>
                     </DialogTrigger>
-                    <DialogContent>
+                    <DialogContent className="max-w-md">
                       <DialogHeader>
-                        <DialogTitle>Create New Tag</DialogTitle>
+                        <DialogTitle>Create Tags</DialogTitle>
                         <DialogDescription>
-                          Add a custom tag to organize your posts. The tag will be available for all posts.
+                          Add one or more tags separated by commas. Existing tags will be selected automatically.
                         </DialogDescription>
                       </DialogHeader>
                       <div className="space-y-4 py-4">
                         <div className="space-y-2">
-                          <Label htmlFor="new-tag-name">Tag Name *</Label>
-                          <Input
-                            id="new-tag-name"
-                            value={newTagName}
-                            onChange={(e) => setNewTagName(e.target.value)}
-                            placeholder="e.g., Technology, Health, Finance"
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter" && !e.shiftKey) {
-                                e.preventDefault();
-                                handleCreateTag();
-                              }
-                            }}
+                          <Label htmlFor="new-tag-names">Tag Names *</Label>
+                          <Textarea
+                            id="new-tag-names"
+                            value={newTagNames}
+                            onChange={(e) => setNewTagNames(e.target.value)}
+                            placeholder="e.g., Technology, Health, Finance, Innovation"
+                            rows={3}
                           />
                           <p className="text-xs text-muted-foreground">
-                            Slug: {newTagName.trim() ? generateSlug(newTagName.trim()) : "will be generated"}
+                            Separate multiple tags with commas (e.g., Technology, Health, Finance)
                           </p>
                         </div>
                       </div>
@@ -964,14 +1199,14 @@ const AdminPostEditor = () => {
                           variant="outline"
                           onClick={() => {
                             setShowCreateTagDialog(false);
-                            setNewTagName("");
+                            setNewTagNames("");
                           }}
                           disabled={creatingTag}
                         >
                           Cancel
                         </Button>
-                        <Button onClick={handleCreateTag} disabled={creatingTag || !newTagName.trim()}>
-                          {creatingTag ? "Creating..." : "Create Tag"}
+                        <Button onClick={handleCreateMultipleTags} disabled={creatingTag || !newTagNames.trim()}>
+                          {creatingTag ? "Creating..." : "Create Tags"}
                         </Button>
                       </DialogFooter>
                     </DialogContent>
