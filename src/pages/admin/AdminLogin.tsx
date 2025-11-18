@@ -11,12 +11,14 @@ const AdminLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setErrorMessage("");
 
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -27,6 +29,30 @@ const AdminLogin = () => {
       if (error) throw error;
 
       if (data.session) {
+        // Check if user is admin
+        const { data: adminCheck } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", data.session.user.id)
+          .eq("role", "admin")
+          .single();
+
+        if (!adminCheck) {
+          // User logged in but not admin - sign them out and show deterrent message
+          await supabase.auth.signOut();
+          setErrorMessage("Fuck you");
+          setEmail("");
+          setPassword("");
+          toast({
+            title: "Access Denied",
+            description: "Fuck you",
+            variant: "destructive",
+            duration: 5000,
+          });
+          setLoading(false);
+          return;
+        }
+
         toast({
           title: "Login successful",
           description: "Welcome back!",
@@ -34,10 +60,15 @@ const AdminLogin = () => {
         navigate("/admin");
       }
     } catch (error: any) {
+      // Show deterrent message for unauthorized access attempts
+      setErrorMessage("Fuck you");
+      setEmail("");
+      setPassword("");
       toast({
-        title: "Login failed",
-        description: error.message || "Invalid credentials",
+        title: "Access Denied",
+        description: "Fuck you",
         variant: "destructive",
+        duration: 5000,
       });
     } finally {
       setLoading(false);
@@ -86,6 +117,17 @@ const AdminLogin = () => {
                 disabled={loading}
               />
             </div>
+
+            {errorMessage && (
+              <div className="p-4 bg-destructive/10 border border-destructive rounded-md">
+                <p className="text-destructive font-bold text-center text-lg">
+                  {errorMessage}
+                </p>
+                <p className="text-destructive/80 text-center text-sm mt-2">
+                  Unauthorized access attempts are not tolerated.
+                </p>
+              </div>
+            )}
 
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Signing in..." : "Sign In"}
