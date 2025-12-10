@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
-import { Save, X, ArrowLeft, Type, Image as ImageIcon, Plus } from "lucide-react";
+import { Save, X, ArrowLeft, Type, Image as ImageIcon, Plus, Trash2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
 type Author = Tables<"authors">;
@@ -206,7 +206,7 @@ const AdminPostEditor = () => {
       console.error("Upload error:", error);
       const errorMessage =
         error instanceof Error &&
-        (error.message.includes("Bucket not found") || error.message.includes("bucket"))
+          (error.message.includes("Bucket not found") || error.message.includes("bucket"))
           ? "Storage bucket 'post-images' not found. Please create it in Supabase Dashboard: Storage → Create Bucket → Name: 'post-images' → Public: Yes"
           : error instanceof Error
             ? error.message
@@ -297,6 +297,40 @@ const AdminPostEditor = () => {
       });
     } finally {
       setCreatingTag(false);
+    }
+  };
+
+  const handleDeleteTag = async (tagId: string, tagName: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent toggling the tag selection
+
+    if (!window.confirm(`Are you sure you want to delete the tag "${tagName}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase.from("tags").delete().eq("id", tagId);
+
+      if (error) throw error;
+
+      // Remove from tags list
+      setTags((prev) => prev.filter((tag) => tag.id !== tagId));
+
+      // Remove from selected tags if present
+      setSelectedTags((prev) => prev.filter((id) => id !== tagId));
+
+      toast({
+        title: "Tag deleted",
+        description: `Tag "${tagName}" has been deleted.`,
+      });
+    } catch (error) {
+      console.error("Delete tag error:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to delete tag.";
+      toast({
+        title: "Delete tag failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
     }
   };
 
@@ -899,9 +933,9 @@ const AdminPostEditor = () => {
                   <SelectContent>
                     <SelectItem value="none" textValue="No author">No author</SelectItem>
                     {authors.map((author) => (
-                      <SelectItem 
-                        key={author.id} 
-                        value={author.id} 
+                      <SelectItem
+                        key={author.id}
+                        value={author.id}
                         textValue={author.role ? `${author.full_name} (${author.role})` : author.full_name}
                       >
                         {author.full_name}
@@ -913,178 +947,90 @@ const AdminPostEditor = () => {
                 {authorId && authors.find((a) => a.id === authorId) && (
                   <p className="text-xs text-muted-foreground">
                     Selected: {authors.find((a) => a.id === authorId)?.full_name}
-                    {authors.find((a) => a.id === authorId)?.role && 
+                    {authors.find((a) => a.id === authorId)?.role &&
                       ` - ${authors.find((a) => a.id === authorId)?.role}`
                     }
                   </p>
                 )}
               </div>
 
-              {/* Markdown Toolbar */}
-              <div className="space-y-2">
+              {/* Content (Markdown) */}
+              <div className="space-y-2 flex flex-col h-full min-h-[600px]">
                 <div className="flex items-center justify-between">
-                  <Label>Content (Markdown) *</Label>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Label htmlFor="content">Content *</Label>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded-md">
+                    <span>Markdown Enabled</span>
+                  </div>
+                </div>
+
+                <div className="border rounded-md shadow-sm bg-card flex-1 flex flex-col focus-within:ring-1 focus-within:ring-ring focus-within:border-primary transition-all duration-200">
+                  {/* Markdown Toolbar */}
+                  <div className="flex flex-wrap items-center gap-1 p-2 border-b bg-muted/40 sticky top-0 z-10 backdrop-blur-sm">
+                    <div className="flex items-center gap-0.5">
+                      <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => insertMarkdown("**$SELECTED**")} title="Bold (Ctrl+B)">
+                        <strong className="font-serif font-bold text-lg">B</strong>
+                      </Button>
+                      <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => insertMarkdown("*$SELECTED*")} title="Italic (Ctrl+I)">
+                        <em className="font-serif italic text-lg">I</em>
+                      </Button>
+                      <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => insertMarkdown("~~$SELECTED~~")} title="Strikethrough">
+                        <span className="line-through text-sm">S</span>
+                      </Button>
+                    </div>
+
+                    <div className="w-px h-5 bg-border mx-1" />
+
+                    <div className="flex items-center gap-0.5">
+                      <Button type="button" variant="ghost" size="sm" className="h-8 px-2 font-bold" onClick={() => insertMarkdown("# ")} title="Heading 1">H1</Button>
+                      <Button type="button" variant="ghost" size="sm" className="h-8 px-2 font-semibold" onClick={() => insertMarkdown("## ")} title="Heading 2">H2</Button>
+                      <Button type="button" variant="ghost" size="sm" className="h-8 px-2 font-medium" onClick={() => insertMarkdown("### ")} title="Heading 3">H3</Button>
+                    </div>
+
+                    <div className="w-px h-5 bg-border mx-1" />
+
+                    <div className="flex items-center gap-0.5">
+                      <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => insertMarkdown("- ")} title="Bullet List">
+                        <Type className="h-4 w-4" />
+                      </Button>
+                      <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => insertMarkdown("1. ")} title="Numbered List">
+                        <span className="font-mono text-xs">1.</span>
+                      </Button>
+                      <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => insertMarkdown("> ")} title="Quote">
+                        <span className="font-mono text-lg leading-none">❝</span>
+                      </Button>
+                      <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => insertMarkdown("---\n")} title="Divider">
+                        <span className="text-xs">―</span>
+                      </Button>
+                    </div>
+
+                    <div className="w-px h-5 bg-border mx-1" />
+
+                    <div className="flex items-center gap-0.5">
+                      <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => insertMarkdown("[$SELECTED](url)")} title="Link">
+                        <span className="underline decoration-dotted text-xs font-bold">link</span>
+                      </Button>
+                      <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => insertMarkdown("![Alt Text](url)")} title="Image">
+                        <ImageIcon className="h-4 w-4" />
+                      </Button>
+                      <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => insertMarkdown("```\n$SELECTED\n```")} title="Code Block">
+                        <span className="font-mono text-xs font-bold">{'<>'}</span>
+                      </Button>
+                    </div>
+                  </div>
+
+                  <Textarea
+                    id="content"
+                    value={content}
+                    onChange={(e) => setContent(e.target.value)}
+                    placeholder="Write your amazing story here..."
+                    className="flex-1 min-h-[400px] border-0 focus-visible:ring-0 p-4 font-mono text-sm leading-relaxed resize-none bg-transparent"
+                  />
+
+                  <div className="px-3 py-1.5 bg-muted/20 border-t flex justify-between items-center text-xs text-muted-foreground">
+                    <span>{content.length} characters</span>
                     <span>Markdown supported</span>
                   </div>
                 </div>
-                <div className="flex flex-wrap gap-1 p-2 border rounded-lg bg-muted/30">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => insertMarkdown("# ")}
-                    title="Heading 1"
-                    className="h-8 px-2"
-                  >
-                    <span className="font-bold">H1</span>
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => insertMarkdown("## ")}
-                    title="Heading 2"
-                    className="h-8 px-2"
-                  >
-                    <span className="font-semibold">H2</span>
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => insertMarkdown("### ")}
-                    title="Heading 3"
-                    className="h-8 px-2"
-                  >
-                    <span className="font-medium">H3</span>
-                  </Button>
-                  <div className="w-px h-6 bg-border mx-1" />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => insertMarkdown("**$SELECTED**")}
-                    title="Bold"
-                    className="h-8 px-2"
-                  >
-                    <Type className="h-4 w-4 font-bold" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => insertMarkdown("*$SELECTED*")}
-                    title="Italic"
-                    className="h-8 px-2"
-                  >
-                    <Type className="h-4 w-4 italic" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => insertMarkdown("~~$SELECTED~~")}
-                    title="Strikethrough"
-                    className="h-8 px-2"
-                  >
-                    <span className="line-through text-sm">S</span>
-                  </Button>
-                  <div className="w-px h-6 bg-border mx-1" />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => insertMarkdown("- ")}
-                    title="Unordered List"
-                    className="h-8 px-2"
-                  >
-                    • List
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => insertMarkdown("1. ")}
-                    title="Ordered List"
-                    className="h-8 px-2"
-                  >
-                    1. List
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => insertMarkdown("> ")}
-                    title="Blockquote"
-                    className="h-8 px-2"
-                  >
-                    " Quote
-                  </Button>
-                  <div className="w-px h-6 bg-border mx-1" />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => insertMarkdown("`$SELECTED`")}
-                    title="Inline Code"
-                    className="h-8 px-2"
-                  >
-                    {'</>'}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => insertMarkdown("```\n$SELECTED\n```")}
-                    title="Code Block"
-                    className="h-8 px-2"
-                  >
-                    {'{ }'}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => insertMarkdown("[$SELECTED](url)")}
-                    title="Link"
-                    className="h-8 px-2"
-                  >
-                    Link
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => insertMarkdown("![alt](url)")}
-                    title="Image"
-                    className="h-8 px-2"
-                  >
-                    <ImageIcon className="h-4 w-4" />
-                  </Button>
-                  <div className="w-px h-6 bg-border mx-1" />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => insertMarkdown("---\n")}
-                    title="Horizontal Rule"
-                    className="h-8 px-2"
-                  >
-                    ─
-                  </Button>
-                </div>
-                <Textarea
-                  id="content"
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  placeholder="Write your post content in Markdown...&#10;&#10;Use the toolbar above for quick formatting, or type Markdown directly."
-                  rows={viewMode === "split" ? 25 : 30}
-                  className="font-mono text-sm leading-relaxed"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Tip: Select text and click formatting buttons, or use Markdown syntax directly.
-                </p>
               </div>
 
               {/* Categories */}
@@ -1217,7 +1163,7 @@ const AdminPostEditor = () => {
                     <p className="text-sm text-muted-foreground">No tags available. Create your first tag!</p>
                   ) : (
                     tags.map((tag) => (
-                      <div key={tag.id} className="flex items-center space-x-2">
+                      <div key={tag.id} className="flex items-center space-x-2 bg-secondary/20 p-1.5 rounded-md hover:bg-secondary/30 transition-colors group">
                         <Checkbox
                           id={`tag-${tag.id}`}
                           checked={selectedTags.includes(tag.id)}
@@ -1225,10 +1171,19 @@ const AdminPostEditor = () => {
                         />
                         <Label
                           htmlFor={`tag-${tag.id}`}
-                          className="text-sm font-normal cursor-pointer"
+                          className="text-sm font-normal cursor-pointer flex-1"
                         >
                           {tag.name}
                         </Label>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={(e) => handleDeleteTag(tag.id, tag.name, e)}
+                          title="Delete tag"
+                        >
+                          <Trash2 className="h-3 w-3 text-destructive" />
+                        </Button>
                       </div>
                     ))
                   )}

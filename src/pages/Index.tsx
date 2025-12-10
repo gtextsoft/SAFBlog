@@ -170,30 +170,38 @@ const Index = () => {
 
       <main className="flex-1">
         {/* Hero Section - Blended with website */}
-        <section className="relative overflow-hidden">
-          {/* Subtle gradient background with overlay */}
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent animate-gradient-shift"></div>
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent"></div>
-          
-          <div className="container relative z-10 py-16 md:py-20">
-            <div className="max-w-4xl mx-auto text-center space-y-6 animate-on-scroll">
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground animate-fade-in stagger-1">
+        <section className="relative overflow-hidden min-h-[80vh] flex items-center justify-center bg-background">
+          {/* Dynamic Background Elements */}
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-accent/5 to-background animate-gradient-shift"></div>
+
+          {/* Decorative Blobs */}
+          <div className="absolute top-[-10%] right-[-5%] w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-[-10%] left-[-5%] w-96 h-96 bg-accent/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+
+          <div className="container relative z-10 py-16 md:py-24">
+            <div className="max-w-5xl mx-auto text-center space-y-8 animate-on-scroll">
+              <div className="inline-flex items-center justify-center px-4 py-1.5 mb-4 rounded-full bg-primary/10 text-primary text-sm font-medium tracking-wide animate-fade-in">
+                ✨ Empowering Communities Together
+              </div>
+
+              <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-foreground tracking-tight leading-tight animate-fade-in stagger-1">
                 Empowering Communities,<br className="hidden md:block" />
-                <span className="md:ml-0"> Transforming Lives</span>
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">Transforming Lives</span>
               </h1>
-              <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto animate-fade-in stagger-2">
-                The Stephen Akintayo Foundation is dedicated to creating lasting change through education,
-                sustainable development, and community empowerment.
+
+              <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto leading-relaxed animate-fade-in stagger-2">
+                The Stephen Akintayo Foundation is dedicated to creating lasting change through <span className="text-foreground font-semibold">education</span>, <span className="text-foreground font-semibold">sustainable development</span>, and <span className="text-foreground font-semibold">community empowerment</span>.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4 animate-fade-in stagger-3">
+
+              <div className="flex flex-col sm:flex-row gap-5 justify-center pt-8 animate-fade-in stagger-3">
                 <Link to="/about">
-                  <Button size="lg" className="w-full sm:w-auto">
+                  <Button size="lg" className="h-14 px-8 text-lg rounded-full bg-primary hover:bg-primary-dark transition-all duration-300 shadow-lg hover:shadow-primary/25 hover:-translate-y-1">
                     Learn More About Us
-                    <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-300" />
+                    <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </Link>
                 <Link to="/blog">
-                  <Button size="lg" variant="outline" className="w-full sm:w-auto">
+                  <Button size="lg" variant="outline" className="h-14 px-8 text-lg rounded-full border-2 border-primary/20 hover:border-primary hover:bg-primary/5 text-foreground transition-all duration-300 hover:-translate-y-1">
                     Read Our Stories
                   </Button>
                 </Link>

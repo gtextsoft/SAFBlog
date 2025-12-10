@@ -90,10 +90,10 @@ export const BlogSidebar = () => {
   return (
     <aside className="space-y-6">
       {/* Newsletter Signup */}
-      <Card className="animate-on-scroll hover-lift transition-all duration-300">
+      <Card className="animate-on-scroll hover-lift transition-all duration-300 border-none bg-gradient-to-br from-primary/5 via-primary/10 to-accent/5 shadow-lg">
         <CardHeader>
-          <CardTitle className="text-xl flex items-center gap-2">
-            <span className="animate-pulse-slow">📧</span>
+          <CardTitle className="text-xl flex items-center gap-2 text-primary">
+            <span className="animate-bounce">📧</span>
             Stay Updated
           </CardTitle>
         </CardHeader>
@@ -107,10 +107,12 @@ export const BlogSidebar = () => {
 
       {/* Categories */}
       {categories.length > 0 && (
-        <Card className="animate-on-scroll hover-lift transition-all duration-300 stagger-1">
+        <Card className="animate-on-scroll hover-lift transition-all duration-300 stagger-1 shadow-md hover:shadow-xl border-border/50">
           <CardHeader>
             <CardTitle className="text-xl flex items-center gap-2">
-              <FolderOpen className="h-5 w-5 transition-transform duration-300 group-hover:rotate-12" />
+              <div className="p-2 bg-primary/10 rounded-lg text-primary">
+                <FolderOpen className="h-4 w-4" />
+              </div>
               Categories
             </CardTitle>
           </CardHeader>
@@ -120,10 +122,10 @@ export const BlogSidebar = () => {
                 <li key={category.id} className="animate-on-scroll" style={{ animationDelay: `${index * 0.05}s` }}>
                   <Link
                     to={`/category/${category.slug}`}
-                    className="flex items-center justify-between group hover:text-primary transition-all duration-300 hover:translate-x-1 rounded-md px-2 py-1 -mx-2 -my-1"
+                    className="flex items-center justify-between group hover:bg-secondary/5 transition-all duration-300 rounded-lg px-3 py-2 -mx-2"
                   >
-                    <span className="text-sm">{category.name}</span>
-                    <Badge variant="secondary" className="text-xs transition-all duration-300 group-hover:scale-110">
+                    <span className="text-sm font-medium text-foreground/80 group-hover:text-primary transition-colors">{category.name}</span>
+                    <Badge variant="secondary" className="text-xs bg-muted text-muted-foreground group-hover:bg-primary group-hover:text-white transition-all duration-300">
                       {category.postCount}
                     </Badge>
                   </Link>
@@ -136,10 +138,12 @@ export const BlogSidebar = () => {
 
       {/* Popular Tags */}
       {tags.length > 0 && (
-        <Card className="animate-on-scroll hover-lift transition-all duration-300 stagger-2">
+        <Card className="animate-on-scroll hover-lift transition-all duration-300 stagger-2 shadow-md hover:shadow-xl border-border/50">
           <CardHeader>
             <CardTitle className="text-xl flex items-center gap-2">
-              <Hash className="h-5 w-5 transition-transform duration-300 group-hover:scale-110" />
+              <div className="p-2 bg-accent/10 rounded-lg text-accent">
+                <Hash className="h-4 w-4" />
+              </div>
               Popular Tags
             </CardTitle>
           </CardHeader>

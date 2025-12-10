@@ -32,26 +32,38 @@ export const FeaturedPost = ({
   tags = [],
 }: FeaturedPostProps) => {
   return (
-    <Card className="overflow-hidden group hover:shadow-xl transition-all duration-300 ease-in-out hover:-translate-y-1 animate-on-scroll">
-      <div className="grid md:grid-cols-2 gap-0">
-        {coverImageUrl && (
-          <div className="overflow-hidden bg-muted">
+    <Card className="overflow-hidden group border-none shadow-xl bg-card hover:shadow-2xl transition-all duration-500 ease-in-out hover:-translate-y-1 animate-on-scroll ring-1 ring-border/50">
+      <div className="grid md:grid-cols-2 gap-0 relative">
+        <div className="absolute top-4 left-4 z-20">
+          <Badge className="bg-primary text-white hover:bg-primary/90 shadow-lg backdrop-blur-md">
+            ✨ Featured Story
+          </Badge>
+        </div>
+
+        {coverImageUrl ? (
+          <Link to={`/blog/${slug}`} className="block relative overflow-hidden h-full min-h-[300px] md:min-h-full">
+            <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/60 to-transparent opacity-60 transition-opacity duration-300 group-hover:opacity-40" />
             <OptimizedImage
               src={coverImageUrl}
               alt={title}
-              aspectRatio="video"
+              aspectRatio="square"
               objectFit="cover"
-              className="md:aspect-square transition-transform duration-700 ease-out group-hover:scale-110"
+              className="h-full w-full transition-transform duration-700 ease-out group-hover:scale-105"
               sizes="(max-width: 768px) 100vw, 50vw"
               priority={true}
             />
+          </Link>
+        ) : (
+          <div className="bg-muted w-full h-full min-h-[300px] flex items-center justify-center">
+            <span className="text-muted-foreground">No Image</span>
           </div>
         )}
-        <CardContent className="p-6 md:p-8 flex flex-col justify-center">
-          <div className="flex flex-wrap gap-2 mb-4">
+
+        <CardContent className="p-8 md:p-12 flex flex-col justify-center relative bg-gradient-to-br from-card via-card/50 to-secondary/5">
+          <div className="flex flex-wrap gap-2 mb-6">
             {categories.slice(0, 2).map((category) => (
               <Link key={category.slug} to={`/category/${category.slug}`}>
-                <Badge variant="secondary" className="hover:bg-primary hover:text-primary-foreground transition-colors">
+                <Badge variant="outline" className="border-primary/20 text-primary hover:bg-primary hover:text-white transition-all duration-300">
                   {category.name}
                 </Badge>
               </Link>
@@ -59,33 +71,33 @@ export const FeaturedPost = ({
           </div>
 
           <Link to={`/blog/${slug}`}>
-            <h2 className="text-3xl md:text-4xl font-bold mb-4 hover:text-primary transition-all duration-300 line-clamp-2 group-hover:translate-x-2">
+            <h2 className="text-3xl md:text-5xl font-bold mb-6 hover:text-primary transition-colors duration-300 leading-tight">
               {title}
             </h2>
           </Link>
 
-          <p className="text-muted-foreground mb-6 line-clamp-3 text-lg">{excerpt}</p>
+          <p className="text-muted-foreground mb-8 line-clamp-3 text-lg leading-relaxed">{excerpt}</p>
 
-          <div className="flex items-center gap-4 text-sm text-muted-foreground mb-6">
-            <div className="flex items-center gap-2">
-              <Avatar className="h-8 w-8">
+          <div className="flex items-center gap-6 mt-auto">
+            <div className="flex items-center gap-3">
+              <Avatar className="h-10 w-10 ring-2 ring-primary/10">
                 <AvatarImage src={author.avatarUrl} alt={author.fullName} />
-                <AvatarFallback>{author.fullName[0]}</AvatarFallback>
+                <AvatarFallback className="bg-primary/5 text-primary">{author.fullName[0]}</AvatarFallback>
               </Avatar>
-              <span>{author.fullName}</span>
+              <div className="flex flex-col">
+                <span className="text-sm font-semibold text-foreground">{author.fullName}</span>
+                <span className="text-xs text-muted-foreground">{format(new Date(publishedAt), "MMM d, yyyy")}</span>
+              </div>
             </div>
-            <div className="flex items-center gap-1">
-              <Calendar className="h-4 w-4" />
-              <span>{format(new Date(publishedAt), "MMMM d, yyyy")}</span>
+
+            <div className="ml-auto">
+              <Link to={`/blog/${slug}`}>
+                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all duration-300 group-hover:scale-110">
+                  <ArrowRight className="h-5 w-5" />
+                </div>
+              </Link>
             </div>
           </div>
-
-          <Link to={`/blog/${slug}`}>
-            <div className="inline-flex items-center gap-2 text-primary font-semibold hover:gap-3 transition-all duration-300 group-hover:text-primary/80">
-              Read More
-              <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
-            </div>
-          </Link>
         </CardContent>
       </div>
     </Card>

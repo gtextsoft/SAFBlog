@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { PostCard } from "@/components/blog/PostCard";
+import { FeaturedPost } from "@/components/blog/FeaturedPost";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -110,7 +111,7 @@ const Blog = () => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
-    
+
     // Create new abort controller for this request
     const abortController = new AbortController();
     abortControllerRef.current = abortController;
@@ -122,10 +123,10 @@ const Blog = () => {
       let filteredPostIds: string[] | null = null;
 
       // Run category and tag filter queries in parallel if needed
-      const categoryPromise = selectedCategory !== "all" 
+      const categoryPromise = selectedCategory !== "all"
         ? supabase.from("post_categories").select("post_id").eq("category_id", selectedCategory)
         : Promise.resolve({ data: null as Array<{ post_id: string }> | null, error: null });
-      
+
       const tagPromise = selectedTags.length > 0
         ? supabase.from("post_tags").select("post_id").in("tag_id", selectedTags)
         : Promise.resolve({ data: null as Array<{ post_id: string }> | null, error: null });
@@ -154,7 +155,7 @@ const Blog = () => {
           console.error("Error fetching post tags:", tagResult.error);
         } else if (tagResult.data && tagResult.data.length > 0) {
           const tagPostIds: string[] = Array.from(new Set(tagResult.data.map((pt: { post_id: string }) => pt.post_id)));
-          
+
           if (filteredPostIds) {
             // Find intersection: posts that match both category AND tags
             filteredPostIds = filteredPostIds.filter((id) => tagPostIds.includes(id));
@@ -334,7 +335,7 @@ const Blog = () => {
           {/* Subtle gradient background with overlay */}
           <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent"></div>
           <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent"></div>
-          
+
           <div className="container relative z-10 py-16 md:py-20">
             <div className="max-w-2xl mx-auto text-center space-y-6 animate-on-scroll">
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground animate-fade-in">Our Blog</h1>
@@ -345,150 +346,190 @@ const Blog = () => {
           </div>
         </section>
 
-        {/* Filters */}
-        <section className="py-8 border-b bg-muted/30">
-          <div className="container">
-            <div className="space-y-4">
-              {/* Search and Category Filter */}
-              <div className="flex flex-col md:flex-row gap-4 max-w-4xl mx-auto">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search posts..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10"
-                  />
+        <div className="container py-12">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+            {/* Main Content */}
+            <div className="lg:col-span-8 space-y-10">
+              {loading ? (
+                <div className="text-center py-20">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                  <p className="text-muted-foreground mt-4">Loading stats...</p>
                 </div>
+              ) : posts.length > 0 ? (
+                <div className="space-y-12">
+                  {/* Featured Post (First post) */}
+                  {currentPage === 1 && posts.length > 0 && (
+                    <div className="mb-12 animate-fade-in">
+                      <FeaturedPost {...posts[0]} />
+                    </div>
+                  )}
 
-                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                  <SelectTrigger className="w-full md:w-[200px]">
-                    <SelectValue placeholder="All Categories" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Categories</SelectItem>
-                    {categories.map((category) => (
-                      <SelectItem key={category.id} value={category.id}>
-                        {category.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                {(selectedCategory !== "all" || selectedTags.length > 0 || searchQuery) && (
-                  <Button variant="outline" onClick={clearFilters} className="w-full md:w-auto">
-                    <X className="h-4 w-4 mr-2" />
-                    Clear Filters
-                  </Button>
-                )}
-              </div>
-
-              {/* Tag Filters */}
-              {tags.length > 0 && (
-                <div className="max-w-4xl mx-auto">
-                  <p className="text-sm text-muted-foreground mb-2">Filter by tags:</p>
-                  <div className="flex flex-wrap gap-2">
-                    {tags.map((tag) => (
-                      <Badge
-                        key={tag.id}
-                        variant={selectedTags.includes(tag.id) ? "default" : "outline"}
-                        className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
-                        onClick={() => toggleTag(tag.id)}
-                      >
-                        {tag.name}
-                      </Badge>
+                  {/* Recent Posts Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {posts.slice(currentPage === 1 ? 1 : 0).map((post) => (
+                      <div key={post.id} className="animate-float">
+                        <PostCard {...post} />
+                      </div>
                     ))}
                   </div>
+
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <div className="flex justify-center pt-8 border-t">
+                      <Pagination>
+                        <PaginationContent>
+                          <PaginationItem>
+                            <PaginationPrevious
+                              href="#"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                if (currentPage > 1) setCurrentPage(currentPage - 1);
+                              }}
+                              className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                            />
+                          </PaginationItem>
+
+                          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                            if (
+                              page === 1 ||
+                              page === totalPages ||
+                              (page >= currentPage - 1 && page <= currentPage + 1)
+                            ) {
+                              return (
+                                <PaginationItem key={page}>
+                                  <PaginationLink
+                                    href="#"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      setCurrentPage(page);
+                                    }}
+                                    isActive={currentPage === page}
+                                  >
+                                    {page}
+                                  </PaginationLink>
+                                </PaginationItem>
+                              );
+                            } else if (page === currentPage - 2 || page === currentPage + 2) {
+                              return (
+                                <PaginationItem key={page}>
+                                  <PaginationEllipsis />
+                                </PaginationItem>
+                              );
+                            }
+                            return null;
+                          })}
+
+                          <PaginationItem>
+                            <PaginationNext
+                              href="#"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+                              }}
+                              className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                            />
+                          </PaginationItem>
+                        </PaginationContent>
+                      </Pagination>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center py-20 border rounded-lg bg-muted/30">
+                  <p className="text-lg text-muted-foreground">No posts found matching your criteria.</p>
+                  <Button variant="link" onClick={clearFilters} className="mt-2 text-primary">
+                    Clear all filters
+                  </Button>
                 </div>
               )}
             </div>
-          </div>
-        </section>
 
-        {/* Posts Grid */}
-        <section className="py-12">
-          <div className="container">
-            {loading ? (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground">Loading posts...</p>
-              </div>
-            ) : posts.length > 0 ? (
-              <>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
-                  {posts.map((post) => (
-                    <PostCard key={post.id} {...post} />
-                  ))}
+            {/* Sidebar */}
+            <div className="lg:col-span-4 space-y-8">
+              <div className="sticky top-24 space-y-8">
+                {/* Search Widget */}
+                <div className="bg-card border rounded-xl p-6 shadow-sm">
+                  <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                    <Search className="h-4 w-4 text-primary" />
+                    Search
+                  </h3>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search articles..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
                 </div>
 
-                {/* Pagination */}
-                {totalPages > 1 && (
-                  <div className="flex justify-center mt-8">
-                    <Pagination>
-                      <PaginationContent>
-                        <PaginationItem>
-                          <PaginationPrevious
-                            href="#"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              if (currentPage > 1) setCurrentPage(currentPage - 1);
-                            }}
-                            className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
-                          />
-                        </PaginationItem>
-
-                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
-                          // Show first page, last page, current page, and pages around current
-                          if (
-                            page === 1 ||
-                            page === totalPages ||
-                            (page >= currentPage - 1 && page <= currentPage + 1)
-                          ) {
-                            return (
-                              <PaginationItem key={page}>
-                                <PaginationLink
-                                  href="#"
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    setCurrentPage(page);
-                                  }}
-                                  isActive={currentPage === page}
-                                >
-                                  {page}
-                                </PaginationLink>
-                              </PaginationItem>
-                            );
-                          } else if (page === currentPage - 2 || page === currentPage + 2) {
-                            return (
-                              <PaginationItem key={page}>
-                                <PaginationEllipsis />
-                              </PaginationItem>
-                            );
-                          }
-                          return null;
-                        })}
-
-                        <PaginationItem>
-                          <PaginationNext
-                            href="#"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              if (currentPage < totalPages) setCurrentPage(currentPage + 1);
-                            }}
-                            className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
-                          />
-                        </PaginationItem>
-                      </PaginationContent>
-                    </Pagination>
+                {/* Categories Widget */}
+                {categories.length > 0 && (
+                  <div className="bg-card border rounded-xl p-6 shadow-sm">
+                    <h3 className="text-lg font-bold mb-4">Categories</h3>
+                    <div className="space-y-2">
+                      <div
+                        className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors ${selectedCategory === "all" ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted"
+                          }`}
+                        onClick={() => setSelectedCategory("all")}
+                      >
+                        <span>All Stories</span>
+                        {/* We could show total count here if available */}
+                      </div>
+                      {categories.map((category) => (
+                        <div
+                          key={category.id}
+                          className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors ${selectedCategory === category.id ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted"
+                            }`}
+                          onClick={() => setSelectedCategory(category.id)}
+                        >
+                          <span>{category.name}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
-              </>
-            ) : (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground">No posts found. Try adjusting your filters.</p>
+
+                {/* Tags Widget */}
+                {tags.length > 0 && (
+                  <div className="bg-card border rounded-xl p-6 shadow-sm">
+                    <h3 className="text-lg font-bold mb-4">Popular Tags</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {tags.map((tag) => (
+                        <Badge
+                          key={tag.id}
+                          variant={selectedTags.includes(tag.id) ? "default" : "secondary"}
+                          className="cursor-pointer hover:scale-105 transition-transform"
+                          onClick={() => toggleTag(tag.id)}
+                        >
+                          {tag.name}
+                        </Badge>
+                      ))}
+                    </div>
+                    {(selectedCategory !== "all" || selectedTags.length > 0 || searchQuery) && (
+                      <Button variant="outline" size="sm" onClick={clearFilters} className="w-full mt-6">
+                        <X className="h-4 w-4 mr-2" />
+                        Clear Filters
+                      </Button>
+                    )}
+                  </div>
+                )}
+
+                {/* Newsletter Widget Placeholder - Could be a component */}
+                <div className="bg-gradient-to-br from-primary to-accent text-primary-foreground rounded-xl p-6 shadow-lg">
+                  <h3 className="text-lg font-bold mb-2">Join Our Community</h3>
+                  <p className="text-primary-foreground/90 text-sm mb-4">
+                    Get the latest stories delivered to your inbox.
+                  </p>
+                  <Button variant="secondary" className="w-full">
+                    Subscribe Now
+                  </Button>
+                </div>
               </div>
-            )}
+            </div>
           </div>
-        </section>
+        </div>
       </main>
 
       <Footer />

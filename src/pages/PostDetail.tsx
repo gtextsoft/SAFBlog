@@ -96,6 +96,17 @@ interface NavigationPost {
   published_at: string | null;
 }
 
+const slugify = (text: string) => {
+  return text
+    .toString()
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^\w\-]+/g, '')
+    .replace(/\-\-+/g, '-')
+    .replace(/^-+/, '')
+    .replace(/-+$/, '');
+};
+
 const PostDetail = () => {
   const { slug } = useParams();
   const [post, setPost] = useState<Post | null>(null);
@@ -103,10 +114,11 @@ const PostDetail = () => {
   const [prevPost, setPrevPost] = useState<NavigationPost | null>(null);
   const [nextPost, setNextPost] = useState<NavigationPost | null>(null);
   const [loading, setLoading] = useState(true);
+  const [headings, setHeadings] = useState<{ id: string; text: string; level: number }[]>([]);
 
   const fetchPost = async () => {
     if (!slug) return;
-    
+
     setLoading(true);
 
     const { data: postData } = await supabase
@@ -125,13 +137,31 @@ const PostDetail = () => {
       const postWithRelations = postData as unknown as Post & {
         post_categories?: PostCategoryRelation[];
         post_tags?: PostTagRelation[];
-        };
+      };
+
+      const categories = postWithRelations.post_categories?.map((pc: PostCategoryRelation) => pc.category) || [];
+      const tags = postWithRelations.post_tags?.map((pt: PostTagRelation) => pt.tag) || [];
 
       setPost({
         ...postWithRelations,
-        categories: postWithRelations.post_categories?.map((pc: PostCategoryRelation) => pc.category) || [],
-        tags: postWithRelations.post_tags?.map((pt: PostTagRelation) => pt.tag) || [],
+        categories,
+        tags,
       });
+
+      // Extract headings for TOC
+      if (postWithRelations.content) {
+        const regex = /^(#{2,3})\s+(.+)$/gm;
+        const extracted = [];
+        let match;
+        while ((match = regex.exec(postWithRelations.content)) !== null) {
+          extracted.push({
+            level: match[1].length,
+            text: match[2],
+            id: slugify(match[2]),
+          });
+        }
+        setHeadings(extracted);
+      }
 
       // Fetch previous and next posts
       const { data: allPosts } = await supabase
@@ -210,7 +240,7 @@ const PostDetail = () => {
       <div className="flex flex-col min-h-screen">
         <Header />
         <div className="flex-1 flex items-center justify-center">
-          <p className="text-muted-foreground">Loading...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
         </div>
         <Footer />
       </div>
@@ -250,7 +280,7 @@ const PostDetail = () => {
   ];
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-background">
       <SEOHead
         title={post.title}
         description={post.excerpt || post.title}
@@ -280,7 +310,7 @@ const PostDetail = () => {
       <Header />
 
       <main className="flex-1">
-        {/* Hero Image - Full Width */}
+        {/* Full Width Hero Image */}
         {post.cover_image_url && (
           <div className="w-full relative bg-muted animate-on-scroll">
             <div className="w-full h-[400px] md:h-[500px] lg:h-[600px] relative overflow-hidden">
@@ -292,268 +322,232 @@ const PostDetail = () => {
                 priority={true}
                 sizes="100vw"
               />
-              {/* Subtle gradient overlay for depth */}
-              <div className="absolute inset-0 bg-gradient-to-b from-black/5 via-transparent to-black/10 pointer-events-none transition-opacity duration-500" />
+              <div className="absolute inset-0 bg-gradient-to-b from-black/5 via-transparent to-black/30 pointer-events-none" />
             </div>
           </div>
         )}
 
-        <article className="py-12">
-          <div className="container max-w-4xl">
-            {/* Breadcrumbs */}
-            <Breadcrumb className="mb-6">
-              <BreadcrumbList>
-                <BreadcrumbItem>
-                  <BreadcrumbLink asChild>
-                    <Link to="/">Home</Link>
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbLink asChild>
-                    <Link to="/blog">Blog</Link>
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                {post.categories.length > 0 && (
-                  <>
-                    <BreadcrumbSeparator />
-                    <BreadcrumbItem>
-                      <BreadcrumbLink asChild>
-                        <Link to={`/category/${post.categories[0].slug}`}>{post.categories[0].name}</Link>
-                      </BreadcrumbLink>
-                    </BreadcrumbItem>
-                  </>
-                )}
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbPage className="line-clamp-1">{post.title}</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
-
-            {/* Categories */}
-            <div className="flex flex-wrap gap-2 mb-4">
-              {post.categories.map((category) => (
-                <Link key={category.slug} to={`/category/${category.slug}`}>
-                  <Badge variant="secondary">{category.name}</Badge>
-                </Link>
-              ))}
-            </div>
-
-            {/* Title */}
-            <h1 className="text-4xl md:text-5xl font-bold mb-6 leading-tight">{post.title}</h1>
-
-            {/* Meta */}
-            <div className="flex flex-wrap items-center gap-4 mb-8 pb-8 border-b">
-              <div className="flex items-center gap-3">
-                <Avatar>
-                  <AvatarImage src={post.author?.avatar_url} alt={post.author?.full_name} />
-                  <AvatarFallback>{post.author?.full_name?.[0] || "A"}</AvatarFallback>
-                </Avatar>
-                <div>
-                  <div className="font-semibold">{post.author?.full_name}</div>
-                  {post.author?.role && (
-                    <div className="text-sm text-muted-foreground">{post.author.role}</div>
+        <div className="container py-12">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+            {/* Main Content */}
+            <article className="lg:col-span-8">
+              {/* Breadcrumbs */}
+              <Breadcrumb className="mb-6">
+                <BreadcrumbList>
+                  <BreadcrumbItem>
+                    <BreadcrumbLink asChild>
+                      <Link to="/">Home</Link>
+                    </BreadcrumbLink>
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator />
+                  <BreadcrumbItem>
+                    <BreadcrumbLink asChild>
+                      <Link to="/blog">Blog</Link>
+                    </BreadcrumbLink>
+                  </BreadcrumbItem>
+                  {post.categories.length > 0 && (
+                    <>
+                      <BreadcrumbSeparator />
+                      <BreadcrumbItem>
+                        <BreadcrumbLink asChild>
+                          <Link to={`/category/${post.categories[0].slug}`}>{post.categories[0].name}</Link>
+                        </BreadcrumbLink>
+                      </BreadcrumbItem>
+                    </>
                   )}
-                </div>
-              </div>
+                  <BreadcrumbSeparator />
+                  <BreadcrumbItem>
+                    <BreadcrumbPage className="line-clamp-1">{post.title}</BreadcrumbPage>
+                  </BreadcrumbItem>
+                </BreadcrumbList>
+              </Breadcrumb>
 
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Calendar className="h-4 w-4" />
-                <span className="text-sm">
-                  {format(new Date(post.published_at), "MMMM d, yyyy")}
-                </span>
-              </div>
-
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Clock className="h-4 w-4" />
-                <span className="text-sm">{formatReadingTime(readingTime)}</span>
-              </div>
-            </div>
-
-            {/* Social Share */}
-            <div className="mb-8 pb-8 border-b">
-              <SocialShare url={postUrl} title={post.title} description={post.excerpt} />
-            </div>
-
-            {/* Content - Improved Typography */}
-            <div className="prose prose-lg prose-slate max-w-none mb-12 dark:prose-invert 
-              prose-headings:font-bold prose-headings:tracking-tight prose-headings:mt-8 prose-headings:mb-4
-              prose-h1:text-3xl prose-h1:mt-10 prose-h1:mb-6 prose-h1:font-extrabold
-              prose-h2:text-2xl prose-h2:mt-8 prose-h2:mb-4 prose-h2:font-bold
-              prose-h3:text-xl prose-h3:mt-6 prose-h3:mb-3 prose-h3:font-semibold
-              prose-p:text-base prose-p:leading-7 prose-p:mb-6 prose-p:text-foreground
-              prose-a:text-primary prose-a:font-medium prose-a:no-underline hover:prose-a:underline prose-a:transition-colors
-              prose-strong:font-semibold prose-strong:text-foreground
-              prose-ul:my-6 prose-ul:pl-6 prose-li:my-2 prose-li:marker:text-primary
-              prose-ol:my-6 prose-ol:pl-6
-              prose-code:text-sm prose-code:bg-muted prose-code:text-foreground prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:font-mono prose-code:before:content-[''] prose-code:after:content-['']
-              prose-pre:bg-muted prose-pre:border prose-pre:border-border prose-pre:rounded-lg prose-pre:p-4 prose-pre:overflow-x-auto prose-pre:my-6
-              prose-img:rounded-lg prose-img:max-w-full prose-img:h-auto prose-img:mx-auto prose-img:shadow-md prose-img:my-8
-              prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:pl-6 prose-blockquote:pr-4 prose-blockquote:py-2 prose-blockquote:my-6 prose-blockquote:italic prose-blockquote:bg-muted/50 prose-blockquote:rounded-r-lg
-              prose-hr:my-8 prose-hr:border-border
-              prose-table:w-full prose-table:my-6 prose-th:border prose-th:border-border prose-th:bg-muted prose-th:p-3 prose-th:font-semibold prose-td:border prose-td:border-border prose-td:p-3">
-              <ReactMarkdown
-                components={{
-                  p: ({ children }) => <p className="mb-6 text-base leading-7 text-foreground">{children}</p>,
-                  h1: ({ children }) => <h1 className="text-3xl font-extrabold mt-10 mb-6 tracking-tight">{children}</h1>,
-                  h2: ({ children }) => <h2 className="text-2xl font-bold mt-8 mb-4 tracking-tight">{children}</h2>,
-                  h3: ({ children }) => <h3 className="text-xl font-semibold mt-6 mb-3 tracking-tight">{children}</h3>,
-                  h4: ({ children }) => <h4 className="text-lg font-semibold mt-6 mb-3 tracking-tight">{children}</h4>,
-                  ul: ({ children }) => <ul className="my-6 ml-6 list-disc space-y-2">{children}</ul>,
-                  ol: ({ children }) => <ol className="my-6 ml-6 list-decimal space-y-2">{children}</ol>,
-                  li: ({ children }) => <li className="text-base leading-7">{children}</li>,
-                  blockquote: ({ children }) => (
-                    <blockquote className="border-l-4 border-primary pl-6 pr-4 py-2 my-6 italic bg-muted/50 rounded-r-lg">
-                      {children}
-                    </blockquote>
-                  ),
-                  code: ({ children, className, ...props }: { children?: React.ReactNode; className?: string; [key: string]: unknown }) => {
-                    const isInline = !className || !className.includes("language-");
-                    if (isInline) {
-                      return (
-                        <code className="text-sm bg-muted text-foreground px-1.5 py-0.5 rounded font-mono" {...props}>
-                          {children}
-                        </code>
-                      );
-                    }
-                    return (
-                      <code className="block text-sm bg-muted text-foreground p-4 rounded-lg overflow-x-auto" {...props}>
-                        {children}
-                      </code>
-                    );
-                  },
-                  img: ({ src, alt }) => (
-                    <OptimizedImage
-                      src={src || ""}
-                      alt={alt || ""}
-                      className="rounded-lg max-w-full mx-auto shadow-md my-8"
-                      objectFit="contain"
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 800px"
-                    />
-                  ),
-                  a: ({ href, children }) => (
-                    <a
-                      href={href}
-                      className="text-primary font-medium no-underline hover:underline transition-colors"
-                      target={href?.startsWith("http") ? "_blank" : undefined}
-                      rel={href?.startsWith("http") ? "noopener noreferrer" : undefined}
-                    >
-                      {children}
-                    </a>
-                  ),
-                  table: ({ children }) => (
-                    <div className="overflow-x-auto my-6">
-                      <table className="w-full border-collapse border border-border">
-                        {children}
-                      </table>
-                    </div>
-                  ),
-                  thead: ({ children }) => <thead className="bg-muted">{children}</thead>,
-                  th: ({ children }) => (
-                    <th className="border border-border p-3 text-left font-semibold">{children}</th>
-                  ),
-                  td: ({ children }) => <td className="border border-border p-3">{children}</td>,
-                  hr: () => <hr className="my-8 border-border" />,
-                }}
-              >
-                {post.content}
-              </ReactMarkdown>
-            </div>
-
-            {/* Tags */}
-            {post.tags.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-12 pb-12 border-b">
-                <span className="text-sm text-muted-foreground mr-2">Tags:</span>
-                {post.tags.map((tag) => (
-                  <Link key={tag.slug} to={`/tag/${tag.slug}`}>
-                    <Badge variant="outline">{tag.name}</Badge>
+              {/* Categories */}
+              <div className="flex flex-wrap gap-2 mb-4">
+                {post.categories.map((category) => (
+                  <Link key={category.slug} to={`/category/${category.slug}`}>
+                    <Badge variant="secondary" className="hover:bg-primary hover:text-primary-foreground transition-colors">
+                      {category.name}
+                    </Badge>
                   </Link>
                 ))}
               </div>
-            )}
 
-            {/* Author Bio */}
-            {post.author?.bio && (
-              <div className="bg-muted/50 rounded-lg p-6 mb-12">
-                <h3 className="text-lg font-semibold mb-3">About the Author</h3>
-                <div className="flex gap-4">
-                  <Avatar className="h-16 w-16">
-                    <AvatarImage src={post.author.avatar_url} alt={post.author.full_name} />
-                    <AvatarFallback className="text-lg">
-                      {post.author.full_name?.[0] || "A"}
-                    </AvatarFallback>
+              {/* Title */}
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6 leading-tight tracking-tight text-foreground">
+                {post.title}
+              </h1>
+
+              {/* Meta */}
+              <div className="flex flex-wrap items-center gap-6 mb-8 pb-8 border-b">
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-10 w-10 border">
+                    <AvatarImage src={post.author?.avatar_url} alt={post.author?.full_name} />
+                    <AvatarFallback>{post.author?.full_name?.[0] || "A"}</AvatarFallback>
                   </Avatar>
                   <div>
-                    <div className="font-semibold">{post.author.full_name}</div>
-                    {post.author.role && (
-                      <div className="text-sm text-muted-foreground mb-2">{post.author.role}</div>
+                    <div className="font-semibold text-sm">{post.author?.full_name}</div>
+                    {post.author?.role && (
+                      <div className="text-xs text-muted-foreground">{post.author.role}</div>
                     )}
-                    <p className="text-sm text-muted-foreground">{post.author.bio}</p>
                   </div>
                 </div>
-              </div>
-            )}
 
-            {/* Newsletter CTA */}
-            <div className="bg-gradient-hero text-white rounded-lg p-8 mb-12">
-              <div className="max-w-2xl mx-auto text-center space-y-4">
-                <h3 className="text-2xl font-bold">Stay Updated</h3>
-                <p className="text-white/90">
-                  Subscribe to our newsletter for more inspiring stories and updates.
-                </p>
-                <div className="max-w-md mx-auto">
-                  <NewsletterSignup source="post_detail" variant="inline" />
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Calendar className="h-4 w-4" />
+                  <span>{format(new Date(post.published_at), "MMM d, yyyy")}</span>
+                </div>
+
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Clock className="h-4 w-4" />
+                  <span>{formatReadingTime(readingTime)}</span>
                 </div>
               </div>
-            </div>
 
-            {/* Previous / Next Post Navigation */}
-            {(prevPost || nextPost) && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-12 pt-12 border-t">
-                {prevPost && (
-                  <Link
-                    to={`/blog/${prevPost.slug}`}
-                    className="group p-4 rounded-lg border hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                      <ChevronLeft className="h-4 w-4" />
-                      Previous Post
-                    </div>
-                    <h4 className="font-semibold group-hover:text-primary transition-colors line-clamp-2">
-                      {prevPost.title}
-                    </h4>
-                  </Link>
-                )}
-                {nextPost && (
-                  <Link
-                    to={`/blog/${nextPost.slug}`}
-                    className="group p-4 rounded-lg border hover:bg-muted/50 transition-colors md:text-right"
-                  >
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2 md:justify-end">
-                      Next Post
-                      <ChevronRight className="h-4 w-4" />
-                    </div>
-                    <h4 className="font-semibold group-hover:text-primary transition-colors line-clamp-2">
-                      {nextPost.title}
-                    </h4>
-                  </Link>
-                )}
+              {/* Social Share (Mobile only) */}
+              <div className="lg:hidden mb-8">
+                <SocialShare url={postUrl} title={post.title} description={post.excerpt} />
               </div>
-            )}
+
+              {/* Content */}
+              <div className="prose prose-lg prose-slate max-w-none mb-12 dark:prose-invert 
+                prose-headings:font-bold prose-headings:tracking-tight
+                prose-p:leading-8 prose-p:text-muted-foreground/90
+                prose-a:text-primary prose-a:no-underline hover:prose-a:underline
+                prose-img:rounded-xl prose-img:shadow-lg
+                prose-blockquote:border-l-primary prose-blockquote:bg-muted/30 prose-blockquote:py-2 prose-blockquote:px-6 prose-blockquote:not-italic prose-blockquote:rounded-r-lg">
+                <ReactMarkdown
+                  components={{
+                    h1: ({ children }) => <h1 id={slugify(children?.toString() || "")} className="scroll-m-20">{children}</h1>,
+                    h2: ({ children }) => <h2 id={slugify(children?.toString() || "")} className="scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight first:mt-0">{children}</h2>,
+                    h3: ({ children }) => <h3 id={slugify(children?.toString() || "")} className="scroll-m-20 text-2xl font-semibold tracking-tight">{children}</h3>,
+                    a: ({ href, children }) => (
+                      <a href={href} target={href?.startsWith("http") ? "_blank" : undefined} rel={href?.startsWith("http") ? "noopener noreferrer" : undefined}>
+                        {children}
+                      </a>
+                    ),
+                    code: ({ children, className, ...props }: { children?: React.ReactNode; className?: string;[key: string]: unknown }) => {
+                      const isInline = !className || !className.includes("language-");
+                      return isInline ? (
+                        <code className="bg-muted px-[0.3rem] py-[0.2rem] rounded font-mono text-sm font-semibold" {...props}>{children}</code>
+                      ) : (
+                        <code className="block bg-muted p-4 rounded-lg overflow-x-auto font-mono text-sm" {...props}>{children}</code>
+                      );
+                    }
+                  }}
+                >
+                  {post.content}
+                </ReactMarkdown>
+              </div>
+
+              {/* Tags */}
+              {post.tags.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-12">
+                  {post.tags.map((tag) => (
+                    <Link key={tag.slug} to={`/tag/${tag.slug}`}>
+                      <Badge variant="outline" className="text-sm py-1 px-3 border-muted-foreground/30 hover:border-primary hover:text-primary transition-colors">
+                        #{tag.name}
+                      </Badge>
+                    </Link>
+                  ))}
+                </div>
+              )}
+
+              {/* Author Bio Box */}
+              {post.author && (
+                <div className="bg-card border rounded-xl p-8 mb-12 flex flex-col md:flex-row gap-6 items-center md:items-start text-center md:text-left">
+                  <Avatar className="h-24 w-24 border-2 border-primary/10">
+                    <AvatarImage src={post.author.avatar_url} alt={post.author.full_name} />
+                    <AvatarFallback className="text-2xl">{post.author.full_name[0]}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 space-y-2 relative">
+                    <div className="absolute top-0 right-0 hidden md:block text-muted-foreground/20">
+                      <User className="h-12 w-12" />
+                    </div>
+                    <h3 className="text-xl font-bold">{post.author.full_name}</h3>
+                    {post.author.role && <p className="text-primary font-medium">{post.author.role}</p>}
+                    {post.author.bio && <p className="text-muted-foreground leading-relaxed">{post.author.bio}</p>}
+                  </div>
+                </div>
+              )}
+
+              {/* Newsletter */}
+              <div className="rounded-xl overflow-hidden mb-12">
+                <NewsletterSignup source="post_detail" variant="card" />
+              </div>
+
+              {/* Navigation */}
+              {(prevPost || nextPost) && (
+                <nav className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-8 border-t">
+                  {prevPost ? (
+                    <Link to={`/blog/${prevPost.slug}`} className="group p-4 rounded-xl border bg-card hover:border-primary/50 transition-all hover:shadow-md">
+                      <span className="text-xs text-muted-foreground mb-1 block group-hover:text-primary transition-colors">&larr; Previous</span>
+                      <span className="font-semibold line-clamp-2">{prevPost.title}</span>
+                    </Link>
+                  ) : <div />}
+                  {nextPost && (
+                    <Link to={`/blog/${nextPost.slug}`} className="group p-4 rounded-xl border bg-card hover:border-primary/50 transition-all hover:shadow-md text-right">
+                      <span className="text-xs text-muted-foreground mb-1 block group-hover:text-primary transition-colors">Next &rarr;</span>
+                      <span className="font-semibold line-clamp-2">{nextPost.title}</span>
+                    </Link>
+                  )}
+                </nav>
+              )}
+            </article>
+
+            {/* Sidebar */}
+            <aside className="hidden lg:block lg:col-span-4 pl-8">
+              <div className="sticky top-24 space-y-8">
+                {/* Table of Contents */}
+                {headings.length > 0 && (
+                  <div className="bg-card border rounded-xl p-6 shadow-sm">
+                    <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+                      Table of Contents
+                    </h3>
+                    <nav className="space-y-1 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+                      {headings.map((heading, index) => (
+                        <a
+                          key={`${heading.id}-${index}`}
+                          href={`#${heading.id}`}
+                          className={`
+                            block py-1.5 text-sm transition-colors border-l-2 pl-3
+                            ${heading.level === 3 ? "ml-4 border-transparent text-muted-foreground hover:text-foreground" : "border-transparent hover:border-primary text-muted-foreground hover:text-primary font-medium"}
+                          `}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            document.getElementById(heading.id)?.scrollIntoView({ behavior: "smooth" });
+                          }}
+                        >
+                          {heading.text}
+                        </a>
+                      ))}
+                    </nav>
+                  </div>
+                )}
+
+                {/* Share Widget */}
+                <div className="bg-card border rounded-xl p-6 shadow-sm">
+                  <h3 className="font-bold text-lg mb-4">Share this story</h3>
+                  <SocialShare url={postUrl} title={post.title} description={post.excerpt} />
+                </div>
+              </div>
+            </aside>
           </div>
-        </article>
+        </div>
 
         {/* Related Posts */}
         {relatedPosts.length > 0 && (
-          <section className="py-12 bg-muted/30">
+          <section className="py-16 bg-muted/30 border-t">
             <div className="container">
-              <h2 className="text-3xl font-bold mb-8 animate-on-scroll">Related Posts</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {relatedPosts.map((relatedPost, index) => (
-                  <div key={relatedPost.id} className="animate-on-scroll" style={{ animationDelay: `${index * 0.1}s` }}>
-                    <PostCard {...relatedPost} />
-                  </div>
+              <div className="flex items-center justify-between mb-8">
+                <h2 className="text-3xl font-bold">You might also like</h2>
+                <Link to="/blog" className="text-primary hover:underline flex items-center gap-1">
+                  View all <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {relatedPosts.map((post) => (
+                  <PostCard key={post.id} {...post} />
                 ))}
               </div>
             </div>

@@ -7,12 +7,12 @@ export const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-all duration-300 shadow-sm">
+    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60 transition-all duration-300 shadow-sm">
       <div className="container flex h-16 items-center justify-between">
         <Link to="/" className="flex items-center space-x-2 group">
-          <img 
-            src="/logos/saflogo.png" 
-            alt="Stephen Akintayo Foundation" 
+          <img
+            src="/logos/saflogo.png"
+            alt="Stephen Akintayo Foundation"
             className="h-10 w-auto transition-transform duration-300 group-hover:scale-110"
           />
         </Link>
