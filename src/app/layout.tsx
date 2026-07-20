@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 
+import { JsonLd } from "@/components/seo/JsonLd";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
+import { jsonLdGraph, organisationSchema, websiteSchema } from "@/lib/seo/schema";
 import { SITE_DESCRIPTION, SITE_LANGUAGE, SITE_NAME, SITE_TAGLINE, SITE_URL } from "@/lib/seo/site";
 
 import { inter, newsreader } from "./fonts";
@@ -59,6 +61,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       suppressHydrationWarning
     >
       <body className="min-h-dvh bg-background text-foreground">
+        {/* Site-wide entities. Nested pages reference these by @id rather
+            than repeating the organisation on every route. */}
+        <JsonLd data={jsonLdGraph(organisationSchema(), websiteSchema())} />
+
         <ThemeProvider>
           <a
             href="#main"

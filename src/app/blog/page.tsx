@@ -4,7 +4,9 @@ import type { Metadata } from "next";
 import { BlogSidebar } from "@/components/blog/BlogSidebar";
 import { Pagination } from "@/components/blog/Pagination";
 import { PostCard } from "@/components/blog/PostCard";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { InFeedPromotion } from "@/components/promotions/PromotionSlot";
+import { blogSchema, breadcrumbSchema, collectionSchema, jsonLdGraph } from "@/lib/seo/schema";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { getPublishedPosts, POSTS_PER_PAGE } from "@/lib/queries/posts";
@@ -48,6 +50,22 @@ export default async function BlogPage({
 
   return (
     <>
+      <JsonLd
+        data={jsonLdGraph(
+          blogSchema(),
+          collectionSchema({
+            name: "Stories",
+            description: `Reporting from the ${SITE_NAME}.`,
+            url: "/blog",
+            posts,
+          }),
+          breadcrumbSchema([
+            { name: "Home", url: "/" },
+            { name: "Stories", url: "/blog" },
+          ]),
+        )}
+      />
+
       <SiteHeader />
 
       <main id="main">

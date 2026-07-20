@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { SubscribeForm } from "@/components/newsletter/SubscribeForm";
 import { CONTACT_EMAIL, SITE_NAME, SOCIAL_PROFILES } from "@/lib/seo/site";
 
 /**
@@ -29,6 +30,13 @@ export function SiteFooter() {
             >
               {CONTACT_EMAIL}
             </a>
+
+            <div className="mt-6 max-w-sm">
+              <h2 className="text-eyebrow uppercase tracking-[0.14em] text-muted-foreground">
+                Get new stories by email
+              </h2>
+              <SubscribeForm source="footer" layout="inline" className="mt-3" />
+            </div>
           </div>
 
           <nav aria-label="Footer">

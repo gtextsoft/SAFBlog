@@ -6,7 +6,9 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import { PostBody } from "@/components/blog/PostBody";
 import { PostCard } from "@/components/blog/PostCard";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { InArticlePromotion } from "@/components/promotions/PromotionSlot";
+import { blogPostingSchema, blogSchema, breadcrumbSchema, jsonLdGraph } from "@/lib/seo/schema";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { formatPostDate } from "@/lib/format";
@@ -53,6 +55,10 @@ export async function generateMetadata({
       modifiedTime: post.updatedAt,
       authors: post.author ? [post.author.fullName] : undefined,
       tags: post.tags.map((t) => t.name),
+      // A real cover photo beats a generated card, so it wins when present.
+      // Leaving this undefined lets Next fall back to opengraph-image.tsx,
+      // which renders the headline — so a post without a cover still gets a
+      // card that says what it is instead of the generic logo.
       images: post.coverImageUrl ? [{ url: post.coverImageUrl }] : undefined,
     },
     twitter: {
@@ -89,6 +95,20 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
 
   return (
     <>
+      <JsonLd
+        data={jsonLdGraph(
+          blogPostingSchema(post),
+          // Included so the BlogPosting's isPartOf reference resolves within
+          // this page's graph instead of pointing at an @id defined elsewhere.
+          blogSchema(),
+          breadcrumbSchema([
+            { name: "Home", url: "/" },
+            { name: "Stories", url: "/blog" },
+            { name: post.title, url: `/blog/${post.slug}` },
+          ]),
+        )}
+      />
+
       <SiteHeader />
 
       <main id="main">
