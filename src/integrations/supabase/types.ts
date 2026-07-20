@@ -64,6 +64,7 @@ export type Database = {
       }
       newsletter_subscribers: {
         Row: {
+          unsubscribed_at: string | null
           created_at: string
           email: string
           full_name: string | null
@@ -72,6 +73,7 @@ export type Database = {
           status: string
         }
         Insert: {
+          unsubscribed_at?: string | null
           created_at?: string
           email: string
           full_name?: string | null
@@ -80,6 +82,7 @@ export type Database = {
           status?: string
         }
         Update: {
+          unsubscribed_at?: string | null
           created_at?: string
           email?: string
           full_name?: string | null

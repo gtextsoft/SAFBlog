@@ -76,11 +76,6 @@ export default async function AdminDashboard() {
           </Link>
         ))}
       </div>
-
-      <p className="mt-6 rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground">
-        Newsletter subscribers are still managed in the previous admin app while that screen is
-        migrated.
-      </p>
     </div>
   );
 }

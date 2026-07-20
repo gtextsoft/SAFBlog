@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useState } from "react";
+import { useActionState, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
+import { ImagePlus, Loader2 } from "lucide-react";
 
-import type { ActionState } from "@/app/admin/(dashboard)/promotions/actions";
+import { uploadPromotionImage, type ActionState } from "@/app/admin/(dashboard)/promotions/actions";
 import type { AdminPromotion } from "@/lib/queries/admin-promotions";
 import { SidebarPromotion } from "@/components/promotions/PromotionSlot";
+import { cn } from "@/lib/utils";
 
 /** Turn an ISO instant into the local value a datetime-local input expects. */
 function toLocalInput(iso: string | null): string {
@@ -95,6 +97,24 @@ export function PromotionForm({
   const set = (key: keyof typeof preview) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setPreview((p) => ({ ...p, [key]: e.target.value }));
 
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
+
+  async function onUpload(file: File) {
+    setUploading(true);
+    setUploadError("");
+
+    const data = new FormData();
+    data.set("file", file);
+    const result = await uploadPromotionImage(data);
+
+    if (result.error) setUploadError(result.error);
+    else if (result.url) setPreview((p) => ({ ...p, imageUrl: result.url! }));
+
+    setUploading(false);
+  }
+
   return (
     <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
       <form action={formAction} className="space-y-6">
@@ -157,22 +177,86 @@ export function PromotionForm({
             />
           </Field>
 
-          <Field
-            label="Image URL"
-            htmlFor="imageUrl"
-            hint="Landscape works best. Leave empty for a text-only placement."
-            error={errors.imageUrl}
-          >
+          <div>
+            <span className="mb-1.5 block text-sm font-medium">Image</span>
+            <input type="hidden" name="imageUrl" value={preview.imageUrl} />
+
+            {preview.imageUrl && (
+              <div className="mb-3">
+                <img
+                  src={preview.imageUrl}
+                  alt=""
+                  className="aspect-[16/9] w-full max-w-sm rounded border border-border object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={() => setPreview((p) => ({ ...p, imageUrl: "" }))}
+                  className="mt-2 inline-flex min-h-11 items-center text-sm text-destructive"
+                >
+                  Remove image
+                </button>
+              </div>
+            )}
+
             <input
-              id="imageUrl"
-              name="imageUrl"
-              type="url"
-              inputMode="url"
-              defaultValue={promotion?.imageUrl ?? ""}
-              onChange={set("imageUrl")}
-              className={inputClass}
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              className="sr-only"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) void onUpload(file);
+              }}
             />
-          </Field>
+            <button
+              type="button"
+              disabled={uploading}
+              onClick={() => fileRef.current?.click()}
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded border border-border px-4 text-sm transition-colors duration-150 hover:border-rule-strong disabled:opacity-60"
+            >
+              {uploading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                  Uploading…
+                </>
+              ) : (
+                <>
+                  <ImagePlus className="h-4 w-4" aria-hidden="true" />
+                  {preview.imageUrl ? "Replace image" : "Upload image"}
+                </>
+              )}
+            </button>
+
+            {uploadError && (
+              <p role="alert" className="mt-2 text-xs text-destructive">
+                {uploadError}
+              </p>
+            )}
+
+            <details className="mt-3">
+              <summary className="cursor-pointer text-xs text-muted-foreground">
+                Or paste an image URL
+              </summary>
+              <input
+                type="url"
+                inputMode="url"
+                aria-label="Image URL"
+                value={preview.imageUrl}
+                onChange={set("imageUrl")}
+                placeholder="https://"
+                className={cn(inputClass, "mt-2")}
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                Uploaded images are resized and served in modern formats. An image hosted
+                elsewhere is shown as-is, so use a file that is already the right size.
+              </p>
+            </details>
+            {errors.imageUrl && (
+              <p role="alert" className="mt-1 text-xs text-destructive">
+                {errors.imageUrl}
+              </p>
+            )}
+          </div>
         </fieldset>
 
         <fieldset className="space-y-4 rounded-lg border border-border bg-card p-5">

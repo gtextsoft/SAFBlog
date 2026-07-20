@@ -1,5 +1,6 @@
-import Image from "next/image";
 import { ArrowUpRight } from "lucide-react";
+
+import { PromotionImage } from "@/components/promotions/PromotionImage";
 
 import type { Promotion } from "@/lib/queries/promotions";
 import { cn } from "@/lib/utils";
@@ -49,15 +50,12 @@ export function SidebarPromotion({ promotion, className }: PromotionProps) {
       <SponsoredLabel sponsor={promotion.sponsorName} />
 
       {promotion.imageUrl && (
-        <div className="relative mt-3 aspect-[16/10] overflow-hidden rounded">
-          <Image
-            src={promotion.imageUrl}
-            alt=""
-            fill
-            sizes="(max-width: 1024px) 100vw, 320px"
-            className="object-cover"
-          />
-        </div>
+        <PromotionImage
+          src={promotion.imageUrl}
+          aspect="aspect-[16/10]"
+          sizes="(max-width: 1024px) 100vw, 320px"
+          className="mt-3"
+        />
       )}
 
       <h3 className="mt-3 text-lg leading-snug">{promotion.title}</h3>
@@ -93,15 +91,12 @@ export function InFeedPromotion({ promotion, className }: PromotionProps) {
       )}
     >
       {promotion.imageUrl && (
-        <div className="relative aspect-[16/9] overflow-hidden">
-          <Image
-            src={promotion.imageUrl}
-            alt=""
-            fill
-            sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 400px"
-            className="object-cover"
-          />
-        </div>
+        <PromotionImage
+          src={promotion.imageUrl}
+          aspect="aspect-[16/9]"
+          sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 400px"
+          className="rounded-none"
+        />
       )}
 
       <div className="flex flex-1 flex-col p-5">
@@ -144,15 +139,12 @@ export function InArticlePromotion({ promotion, className }: PromotionProps) {
       )}
     >
       {promotion.imageUrl && (
-        <div className="relative aspect-[4/3] w-full shrink-0 overflow-hidden rounded sm:w-44">
-          <Image
-            src={promotion.imageUrl}
-            alt=""
-            fill
-            sizes="(max-width: 640px) 100vw, 176px"
-            className="object-cover"
-          />
-        </div>
+        <PromotionImage
+          src={promotion.imageUrl}
+          aspect="aspect-[4/3]"
+          sizes="(max-width: 640px) 100vw, 176px"
+          className="w-full shrink-0 sm:w-44"
+        />
       )}
 
       <div className="min-w-0">

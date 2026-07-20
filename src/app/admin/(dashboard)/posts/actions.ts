@@ -132,15 +132,28 @@ async function syncTaxonomy(
   return null;
 }
 
-/** Purge every cached surface a post appears on. */
+/**
+ * Purge every cached surface a post appears on.
+ *
+ * Includes the taxonomy archives: publishing into a category changes that
+ * category's page and its post count in every sidebar, neither of which Next
+ * can infer. The `"page"` variant matches the route pattern, so all generated
+ * category and tag pages are invalidated rather than one guessed slug.
+ */
 function revalidatePost(slug: string) {
   revalidatePath("/");
   revalidatePath("/blog");
   revalidatePath(`/blog/${slug}`);
+  revalidatePath("/category/[slug]", "page");
+  revalidatePath("/tag/[slug]", "page");
+
+  // Discovery surfaces — a post missing from these is invisible to crawlers
+  // and AI answer engines until the hour is up.
   revalidatePath("/sitemap.xml");
   revalidatePath("/feed.xml");
   revalidatePath("/llms.txt");
   revalidatePath("/llms-full.txt");
+
   revalidatePath("/admin/posts");
 }
 

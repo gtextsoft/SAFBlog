@@ -65,6 +65,27 @@ export interface ActionState {
   fieldErrors?: Record<string, string>;
 }
 
+/**
+ * Purge every cached surface a promotion can appear on.
+ *
+ * Public pages are prerendered with `revalidate = 3600`, and Next has no way
+ * to know the promotions table changed — so without this a newly published
+ * placement stays invisible for up to an hour, which reads as "the ad system
+ * is broken".
+ *
+ * The `"page"` variant matches the route pattern, invalidating every generated
+ * page under it (all posts, all categories, all tags) rather than just one.
+ */
+function revalidatePromotionSurfaces() {
+  revalidatePath("/admin/promotions");
+
+  revalidatePath("/"); // home — sidebar slot
+  revalidatePath("/blog"); // index — in-feed and sidebar slots
+  revalidatePath("/blog/[slug]", "page"); // articles — in-article and sidebar
+  revalidatePath("/category/[slug]", "page");
+  revalidatePath("/tag/[slug]", "page");
+}
+
 function parse(formData: FormData) {
   return PromotionSchema.safeParse({
     title: formData.get("title"),
@@ -124,7 +145,7 @@ export async function createPromotion(
     return { error: "Could not save this promotion. Please try again." };
   }
 
-  revalidatePath("/admin/promotions");
+  revalidatePromotionSurfaces();
   redirect("/admin/promotions?created=1");
 }
 
@@ -145,10 +166,7 @@ export async function updatePromotion(
     return { error: "Could not save this promotion. Please try again." };
   }
 
-  // The public pages cache promotions for an hour; purge so an edit is live
-  // immediately rather than whenever the window happens to roll over.
-  revalidatePath("/admin/promotions");
-  revalidatePath("/", "layout");
+  revalidatePromotionSurfaces();
   redirect("/admin/promotions?saved=1");
 }
 
@@ -161,8 +179,44 @@ export async function deletePromotion(id: string): Promise<void> {
     console.error("deletePromotion", { id, message: error.message });
   }
 
-  revalidatePath("/admin/promotions");
-  revalidatePath("/", "layout");
+  revalidatePromotionSurfaces();
+}
+
+/**
+ * Upload promotion artwork.
+ *
+ * Runs server-side under the admin session, so the storage bucket needs no
+ * anonymous write access. Images stored here are served from our own Supabase
+ * host, which means they go through next/image optimisation — a pasted
+ * third-party URL cannot.
+ */
+export async function uploadPromotionImage(
+  formData: FormData,
+): Promise<{ url?: string; error?: string }> {
+  const supabase = await requireAdmin();
+
+  const file = formData.get("file");
+  if (!(file instanceof File) || file.size === 0) return { error: "Choose an image first." };
+  if (!file.type.startsWith("image/")) return { error: "That file is not an image." };
+  if (file.size > 5 * 1024 * 1024) return { error: "Images must be under 5 MB." };
+
+  const extension = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
+  const path = `promotions/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${extension}`;
+
+  const { error } = await supabase.storage
+    .from("post-images")
+    .upload(path, file, { cacheControl: "3600", upsert: false, contentType: file.type });
+
+  if (error) {
+    console.error("uploadPromotionImage", { message: error.message });
+    return { error: "Upload failed. Please try again." };
+  }
+
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from("post-images").getPublicUrl(path);
+
+  return { url: publicUrl };
 }
 
 /** Quick pause/resume from the list, without opening the editor. */
@@ -178,6 +232,5 @@ export async function setPromotionStatus(
     console.error("setPromotionStatus", { id, status, message: error.message });
   }
 
-  revalidatePath("/admin/promotions");
-  revalidatePath("/", "layout");
+  revalidatePromotionSurfaces();
 }
