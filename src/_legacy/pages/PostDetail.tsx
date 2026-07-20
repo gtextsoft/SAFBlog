@@ -1,19 +1,19 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
+import { Header } from "@/_legacy/components/layout/Header";
+import { Footer } from "@/_legacy/components/layout/Footer";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { NewsletterSignup } from "@/components/newsletter/NewsletterSignup";
-import { PostCard } from "@/components/blog/PostCard";
+import { NewsletterSignup } from "@/_legacy/components/newsletter/NewsletterSignup";
+import { PostCard } from "@/_legacy/components/blog/PostCard";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { Calendar, User, ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, Clock } from "lucide-react";
 import ReactMarkdown from "react-markdown";
-import { SEOHead } from "@/components/seo/SEOHead";
-import { ArticleStructuredData, BreadcrumbStructuredData } from "@/components/seo/StructuredData";
-import { SocialShare } from "@/components/blog/SocialShare";
+import { SEOHead } from "@/_legacy/components/seo/SEOHead";
+import { ArticleStructuredData, BreadcrumbStructuredData } from "@/_legacy/components/seo/StructuredData";
+import { SocialShare } from "@/_legacy/components/blog/SocialShare";
 import { calculateReadingTime, formatReadingTime } from "@/lib/reading-time";
 import {
   Breadcrumb,

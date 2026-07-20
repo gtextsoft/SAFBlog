@@ -1,9 +1,9 @@
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
-import { NewsletterSignup } from "@/components/newsletter/NewsletterSignup";
+import { Header } from "@/_legacy/components/layout/Header";
+import { Footer } from "@/_legacy/components/layout/Footer";
+import { NewsletterSignup } from "@/_legacy/components/newsletter/NewsletterSignup";
 import { Mail, Bell, Zap } from "lucide-react";
-import { SEOHead } from "@/components/seo/SEOHead";
-import { OrganizationStructuredData } from "@/components/seo/StructuredData";
+import { SEOHead } from "@/_legacy/components/seo/SEOHead";
+import { OrganizationStructuredData } from "@/_legacy/components/seo/StructuredData";
 import { useScrollVisibility } from "@/hooks/use-scroll-animation";
 
 const Newsletter = () => {

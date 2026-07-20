@@ -1,8 +1,8 @@
 import { useEffect, useState, useCallback, useRef } from "react";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
-import { PostCard } from "@/components/blog/PostCard";
-import { FeaturedPost } from "@/components/blog/FeaturedPost";
+import { Header } from "@/_legacy/components/layout/Header";
+import { Footer } from "@/_legacy/components/layout/Footer";
+import { PostCard } from "@/_legacy/components/blog/PostCard";
+import { FeaturedPost } from "@/_legacy/components/blog/FeaturedPost";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -18,8 +18,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { Search, X } from "lucide-react";
-import { SEOHead } from "@/components/seo/SEOHead";
-import { BlogStructuredData, OrganizationStructuredData } from "@/components/seo/StructuredData";
+import { SEOHead } from "@/_legacy/components/seo/SEOHead";
+import { BlogStructuredData, OrganizationStructuredData } from "@/_legacy/components/seo/StructuredData";
 import { useScrollVisibility } from "@/hooks/use-scroll-animation";
 
 const POSTS_PER_PAGE = 10;
@@ -200,7 +200,17 @@ const Blog = () => {
 
       // Apply search filter
       if (debouncedSearchQuery) {
-        dataQuery = dataQuery.or(`title.ilike.%${debouncedSearchQuery}%,excerpt.ilike.%${debouncedSearchQuery}%`);
+        // PostgREST parses `.or()` as a comma/parenthesis-delimited expression,
+        // so raw input would let a user rewrite the filter. Escape the PostgREST
+        // metacharacters and the SQL LIKE wildcards before interpolating.
+        const term = debouncedSearchQuery
+          .replace(/[\\%_]/g, (c) => `\\${c}`)
+          .replace(/[,()."]/g, " ")
+          .trim();
+
+        if (term) {
+          dataQuery = dataQuery.or(`title.ilike.%${term}%,excerpt.ilike.%${term}%`);
+        }
       }
 
       // Apply ordering

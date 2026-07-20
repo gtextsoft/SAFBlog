@@ -14,15 +14,22 @@ export default {
     },
     extend: {
       fontFamily: {
-        body: ["var(--font-body)"],
-        heading: ["var(--font-heading)"],
-        accent: ["var(--font-accent)"],
-        sans: ["var(--font-body)"],
+        sans: ["var(--font-body)", "system-ui", "sans-serif"],
+        body: ["var(--font-body)", "system-ui", "sans-serif"],
+        display: ["var(--font-display)", "Georgia", "serif"],
       },
       fontSize: {
-        base: ["16px", { lineHeight: "1.65" }],
-        lg: ["18px", { lineHeight: "1.7" }],
-        xl: ["20px", { lineHeight: "1.6" }],
+        "eyebrow": ["0.75rem", { lineHeight: "1.4", letterSpacing: "0.14em" }],
+        "sm": ["0.875rem", { lineHeight: "1.55" }],
+        "base": ["1rem", { lineHeight: "1.65" }],
+        "lg": ["1.125rem", { lineHeight: "1.7" }],
+        "article": ["1.1875rem", { lineHeight: "1.75" }],
+        "xl": ["1.375rem", { lineHeight: "1.45" }],
+        "2xl": ["1.75rem", { lineHeight: "1.3" }],
+        "3xl": ["2.125rem", { lineHeight: "1.22" }],
+        "4xl": ["2.75rem", { lineHeight: "1.15" }],
+        "5xl": ["3.5rem", { lineHeight: "1.08" }],
+        "6xl": ["4.25rem", { lineHeight: "1.04" }],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -33,18 +40,23 @@ export default {
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
-          light: "hsl(var(--primary-light))",
-          dark: "hsl(var(--primary-dark))",
+          hover: "hsl(var(--primary-hover))",
+          subtle: "hsl(var(--primary-subtle))",
+        },
+        "surface-sunken": "hsl(var(--surface-sunken))",
+        "rule-strong": "hsl(var(--rule-strong))",
+        success: {
+          DEFAULT: "hsl(var(--success))",
+          foreground: "hsl(var(--success-foreground))",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
           foreground: "hsl(var(--secondary-foreground))",
-          light: "hsl(var(--secondary-light))",
         },
         accent: {
           DEFAULT: "hsl(var(--accent))",
           foreground: "hsl(var(--accent-foreground))",
-          light: "hsl(var(--accent-light))",
+          subtle: "hsl(var(--accent-subtle))",
         },
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
@@ -74,9 +86,17 @@ export default {
         },
       },
       borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        sm: "var(--radius-sm)",
+        DEFAULT: "var(--radius)",
+        md: "var(--radius)",
+        lg: "var(--radius-lg)",
+      },
+      boxShadow: {
+        overlay: "var(--shadow-overlay)",
+        raised: "var(--shadow-raised)",
+      },
+      maxWidth: {
+        measure: "var(--measure)",
       },
       keyframes: {
         "accordion-down": {

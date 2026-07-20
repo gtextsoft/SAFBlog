@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
-import { PostCard } from "@/components/blog/PostCard";
+import { Header } from "@/_legacy/components/layout/Header";
+import { Footer } from "@/_legacy/components/layout/Footer";
+import { PostCard } from "@/_legacy/components/blog/PostCard";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft } from "lucide-react";
-import { SEOHead } from "@/components/seo/SEOHead";
-import { BreadcrumbStructuredData } from "@/components/seo/StructuredData";
+import { SEOHead } from "@/_legacy/components/seo/SEOHead";
+import { BreadcrumbStructuredData } from "@/_legacy/components/seo/StructuredData";
 import {
   Breadcrumb,
   BreadcrumbList,

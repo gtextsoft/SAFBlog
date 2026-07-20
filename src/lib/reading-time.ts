@@ -14,7 +14,7 @@ export function calculateReadingTime(text: string, wordsPerMinute: number = 200)
   const cleanText = text
     .replace(/```[\s\S]*?```/g, "") // Remove code blocks
     .replace(/`[^`]+`/g, "") // Remove inline code
-    .replace(/\[([^\]]+)\]\([^\)]+\)/g, "$1") // Remove markdown links but keep text
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1") // Remove markdown links but keep text
     .replace(/[#*_~`]/g, "") // Remove markdown formatting
     .replace(/<[^>]+>/g, "") // Remove HTML tags
     .trim();

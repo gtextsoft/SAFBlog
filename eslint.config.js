@@ -5,7 +5,9 @@ import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  { ignores: ["dist"] },
+  // `src/_legacy` is the not-yet-deleted Vite app; it is excluded from the
+  // TypeScript project too and gets removed once the migration completes.
+  { ignores: ["dist", ".next", "src/_legacy"] },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ["**/*.{ts,tsx}"],

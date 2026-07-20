@@ -38,14 +38,13 @@ const AdminLogin = () => {
           .single();
 
         if (!adminCheck) {
-          // User logged in but not admin - sign them out and show deterrent message
+          // Authenticated, but without the admin role - end the session.
           await supabase.auth.signOut();
-          setErrorMessage("Fuck you");
-          setEmail("");
+          setErrorMessage("This account doesn't have admin access.");
           setPassword("");
           toast({
-            title: "Access Denied",
-            description: "Fuck you",
+            title: "Access denied",
+            description: "This account doesn't have admin access.",
             variant: "destructive",
             duration: 5000,
           });
@@ -59,14 +58,13 @@ const AdminLogin = () => {
         });
         navigate("/admin");
       }
-    } catch (error: any) {
-      // Show deterrent message for unauthorized access attempts
-      setErrorMessage("Fuck you");
-      setEmail("");
+    } catch {
+      // Deliberately generic: don't reveal whether the account exists.
+      setErrorMessage("Incorrect email or password.");
       setPassword("");
       toast({
-        title: "Access Denied",
-        description: "Fuck you",
+        title: "Sign in failed",
+        description: "Incorrect email or password.",
         variant: "destructive",
         duration: 5000,
       });
@@ -119,13 +117,12 @@ const AdminLogin = () => {
             </div>
 
             {errorMessage && (
-              <div className="p-4 bg-destructive/10 border border-destructive rounded-md">
-                <p className="text-destructive font-bold text-center text-lg">
-                  {errorMessage}
-                </p>
-                <p className="text-destructive/80 text-center text-sm mt-2">
-                  Unauthorized access attempts are not tolerated.
-                </p>
+              <div
+                role="alert"
+                aria-live="polite"
+                className="p-3 bg-destructive/10 border border-destructive/50 rounded-md"
+              >
+                <p className="text-destructive text-sm">{errorMessage}</p>
               </div>
             )}
 

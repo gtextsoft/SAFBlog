@@ -235,6 +235,67 @@ export type Database = {
         }
         Relationships: []
       }
+      // Hand-written to match supabase/migrations/20260720000000_add_promotions.sql.
+      // Regenerate this file once that migration is applied and these entries
+      // will be replaced by the generated equivalents:
+      //   supabase gen types typescript --linked > src/integrations/supabase/types.ts
+      promotions: {
+        Row: {
+          body: string | null
+          clicks: number
+          created_at: string
+          cta_label: string
+          ends_at: string | null
+          id: string
+          image_url: string | null
+          impressions: number
+          placement: Database["public"]["Enums"]["promotion_placement"]
+          priority: number
+          sponsor_name: string
+          starts_at: string | null
+          status: Database["public"]["Enums"]["promotion_status"]
+          target_url: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          body?: string | null
+          clicks?: number
+          created_at?: string
+          cta_label?: string
+          ends_at?: string | null
+          id?: string
+          image_url?: string | null
+          impressions?: number
+          placement?: Database["public"]["Enums"]["promotion_placement"]
+          priority?: number
+          sponsor_name: string
+          starts_at?: string | null
+          status?: Database["public"]["Enums"]["promotion_status"]
+          target_url: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string | null
+          clicks?: number
+          created_at?: string
+          cta_label?: string
+          ends_at?: string | null
+          id?: string
+          image_url?: string | null
+          impressions?: number
+          placement?: Database["public"]["Enums"]["promotion_placement"]
+          priority?: number
+          sponsor_name?: string
+          starts_at?: string | null
+          status?: Database["public"]["Enums"]["promotion_status"]
+          target_url?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -247,9 +308,19 @@ export type Database = {
         }
         Returns: boolean
       }
+      record_promotion_click: {
+        Args: { _promotion_id: string }
+        Returns: string
+      }
+      record_promotion_impression: {
+        Args: { _promotion_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "editor" | "viewer"
+      promotion_placement: "sidebar" | "in_feed" | "in_article"
+      promotion_status: "draft" | "active" | "paused" | "ended"
     }
     CompositeTypes: {
       [_ in never]: never

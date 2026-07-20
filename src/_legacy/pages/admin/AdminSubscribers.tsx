@@ -40,10 +40,19 @@ const AdminSubscribers = () => {
       format(new Date(sub.created_at), "yyyy-MM-dd HH:mm:ss"),
     ]);
 
+    // Escape a value for CSV. Two concerns:
+    //  - RFC 4180: a literal " inside a quoted field must be doubled.
+    //  - Formula injection: spreadsheet apps execute a cell starting with
+    //    = + - @ (or tab/CR), so prefix those with a single quote.
+    const escapeCell = (value: string) => {
+      const normalized = /^[=+\-@\t\r]/.test(value) ? `'${value}` : value;
+      return `"${normalized.replace(/"/g, '""')}"`;
+    };
+
     // Combine headers and rows
     const csvContent = [headers, ...rows]
-      .map((row) => row.map((cell) => `"${cell}"`).join(","))
-      .join("\n");
+      .map((row) => row.map(escapeCell).join(","))
+      .join("\r\n");
 
     // Create blob and download
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
@@ -55,6 +64,8 @@ const AdminSubscribers = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    // Release the blob; without this the object URL leaks for the page's lifetime.
+    URL.revokeObjectURL(url);
   };
 
   return (

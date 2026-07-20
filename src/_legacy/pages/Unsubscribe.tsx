@@ -1,18 +1,16 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
+import { Header } from "@/_legacy/components/layout/Header";
+import { Footer } from "@/_legacy/components/layout/Footer";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Mail, Check, X, ArrowLeft } from "lucide-react";
-import { SEOHead } from "@/components/seo/SEOHead";
+import { SEOHead } from "@/_legacy/components/seo/SEOHead";
 import { useScrollVisibility } from "@/hooks/use-scroll-animation";
 
 const Unsubscribe = () => {
   const [searchParams] = useSearchParams();
-  const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
@@ -23,17 +21,17 @@ const Unsubscribe = () => {
 
   useScrollVisibility();
 
-  useEffect(() => {
-    if (emailParam) {
-      setEmail(emailParam);
-    }
-  }, [emailParam]);
-
+  // Unsubscribing is authorised by the signed token in the emailed link, not
+  // by a session — a recipient has no account. The write itself happens in the
+  // `unsubscribe` Edge Function under the service-role key, because RLS
+  // (correctly) denies anonymous writes to newsletter_subscribers.
   const handleUnsubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!email || !/\S+@\S+\.\S+/.test(email)) {
-      setError("Please enter a valid email address.");
+    if (!token) {
+      setError(
+        "This page needs the unsubscribe link from your email. Please open the link at the bottom of any newsletter we sent you.",
+      );
       return;
     }
 
@@ -41,36 +39,16 @@ const Unsubscribe = () => {
     setError("");
 
     try {
-      // Find subscriber by email
-      const { data: subscriber, error: fetchError } = await supabase
-        .from("newsletter_subscribers")
-        .select("*")
-        .eq("email", email.trim().toLowerCase())
-        .single();
+      const { data, error: fnError } = await supabase.functions.invoke("unsubscribe", {
+        body: { token },
+      });
 
-      if (fetchError || !subscriber) {
-        setError("Email not found in our newsletter list.");
+      if (fnError) throw fnError;
+
+      if (!data?.ok) {
+        setError(data?.message ?? "This unsubscribe link is invalid or has expired.");
         setLoading(false);
         return;
-      }
-
-      if (subscriber.status === "unsubscribed") {
-        setError("This email is already unsubscribed.");
-        setLoading(false);
-        return;
-      }
-
-      // Update status to unsubscribed
-      const { error: updateError } = await supabase
-        .from("newsletter_subscribers")
-        .update({
-          status: "unsubscribed",
-          unsubscribed_at: new Date().toISOString(),
-        })
-        .eq("email", email.trim().toLowerCase());
-
-      if (updateError) {
-        throw updateError;
       }
 
       setSuccess(true);
@@ -116,7 +94,9 @@ const Unsubscribe = () => {
                   </div>
                   <h1 className="text-3xl font-bold mb-2">Unsubscribe from Newsletter</h1>
                   <p className="text-muted-foreground">
-                    We're sorry to see you go. Enter your email address to unsubscribe.
+                    {token
+                      ? "We're sorry to see you go. Confirm below and we'll stop emailing you."
+                      : "Open the unsubscribe link at the bottom of any newsletter to complete this."}
                   </p>
                 </div>
 
@@ -139,34 +119,39 @@ const Unsubscribe = () => {
                   </div>
                 ) : (
                   <form onSubmit={handleUnsubscribe} className="space-y-4 animate-fade-in stagger-1">
-                    <div>
-                      <label htmlFor="email" className="block text-sm font-medium mb-2">
-                        Email Address
-                      </label>
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="your.email@example.com"
-                        value={email}
-                        onChange={(e) => {
-                          setEmail(e.target.value);
-                          setError("");
-                        }}
-                        required
-                        disabled={loading}
-                        className={error ? "border-destructive" : ""}
-                      />
-                      {error && (
-                        <p className="text-sm text-destructive mt-2 flex items-center gap-1 animate-fade-in">
-                          <X className="h-4 w-4" />
-                          {error}
-                        </p>
-                      )}
-                    </div>
+                    {emailParam && (
+                      <p className="text-sm text-center text-muted-foreground">
+                        Unsubscribing <span className="font-medium text-foreground">{emailParam}</span>
+                      </p>
+                    )}
 
-                    <Button type="submit" disabled={loading} className="w-full">
+                    {error && (
+                      <p
+                        role="alert"
+                        aria-live="polite"
+                        className="text-sm text-destructive flex items-start gap-2 animate-fade-in"
+                      >
+                        <X className="h-4 w-4 mt-0.5 shrink-0" />
+                        {error}
+                      </p>
+                    )}
+
+                    <Button type="submit" disabled={loading || !token} className="w-full">
                       {loading ? "Unsubscribing..." : "Unsubscribe"}
                     </Button>
+
+                    {!token && (
+                      <p className="text-xs text-center text-muted-foreground">
+                        Can't find the email? Write to{" "}
+                        <a
+                          href="mailto:info@stephenakintayofoundation.org"
+                          className="text-primary hover:underline transition-colors duration-300"
+                        >
+                          info@stephenakintayofoundation.org
+                        </a>{" "}
+                        and we'll remove you.
+                      </p>
+                    )}
 
                     <p className="text-xs text-center text-muted-foreground">
                       If you change your mind, you can always{" "}

@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Facebook, Twitter, Instagram, Linkedin, Mail } from "lucide-react";
-import { NewsletterSignup } from "@/components/newsletter/NewsletterSignup";
+import { NewsletterSignup } from "@/_legacy/components/newsletter/NewsletterSignup";
 
 export const Footer = () => {
   const currentYear = new Date().getFullYear();

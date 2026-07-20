@@ -62,56 +62,39 @@ export const NewsletterSignup = ({
         source,
       });
 
+      // A duplicate email is treated exactly like a new one. Reporting
+      // "already subscribed" would let anyone probe whether a given address
+      // is on the list, so every outcome below looks identical to the caller.
       if (error) {
         if (error.code === "23505") {
-          // Check if already unsubscribed
-          const { data: existing } = await supabase
+          // Re-subscribe unconditionally; this is a no-op for an address that
+          // is already active, and does not disclose which case applied.
+          const { error: updateError } = await supabase
             .from("newsletter_subscribers")
-            .select("status")
-            .eq("email", trimmedEmail)
-            .single();
+            .update({ status: "subscribed" })
+            .eq("email", trimmedEmail);
 
-          if (existing?.status === "unsubscribed") {
-            // Resubscribe
-            const updateData: any = { status: "subscribed" };
-            // Only set unsubscribed_at to null if column exists
-            const { error: updateError } = await supabase
-              .from("newsletter_subscribers")
-              .update(updateData)
-              .eq("email", trimmedEmail);
-
-            if (updateError) throw updateError;
-
-            setSuccess(true);
-            toast({
-              title: "Welcome back!",
-              description: "You've been resubscribed to our newsletter.",
-            });
-          } else {
-            toast({
-              title: "Already subscribed",
-              description: "This email is already subscribed to our newsletter.",
-            });
-          }
+          if (updateError) throw updateError;
         } else {
           throw error;
         }
-      } else {
-        setSuccess(true);
-        toast({
-          title: "Successfully subscribed!",
-          description: "Thank you for subscribing. Check your inbox for updates.",
-        });
-        setEmail("");
-        setName("");
-        // Reset success message after 5 seconds
-        setTimeout(() => setSuccess(false), 5000);
       }
-    } catch (error: any) {
+
+      setSuccess(true);
+      toast({
+        title: "Successfully subscribed!",
+        description: "Thank you for subscribing. Check your inbox for updates.",
+      });
+      setEmail("");
+      setName("");
+      // Reset success message after 5 seconds
+      setTimeout(() => setSuccess(false), 5000);
+    } catch (error: unknown) {
       console.error("Newsletter subscription error:", error);
       toast({
         title: "Subscription failed",
-        description: error.message || "Something went wrong. Please try again later.",
+        // Don't surface the raw database error to the visitor.
+        description: "Something went wrong. Please try again later.",
         variant: "destructive",
       });
     } finally {

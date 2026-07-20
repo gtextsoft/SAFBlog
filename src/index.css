@@ -2,142 +2,153 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/**
+ * SAF Blog design tokens — editorial modernism.
+ *
+ * All colour is HSL triplets so Tailwind can apply opacity modifiers.
+ * Nothing here is decorative: structure comes from type, rule lines and
+ * whitespace, not from gradients or shadows.
+ */
 
 @layer base {
   :root {
-    /* Typography: Font families */
-    --font-body: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    --font-heading: "Poppins", "Helvetica Neue", Helvetica, Arial, sans-serif;
-    --font-accent: "Lora", Georgia, serif;
-
-    /* SAF Brand colors - Professional & Fun Redesign
-    * Primary: Electric Blue (Trust, Energy)
-    * Accent: Golden Amber (Warmth, Optimism)
-    * Background: Clean Soft White
-    */
-    --background: 210 40% 98%; /* Very subtle cool gray/blue */
-    --foreground: 222 47% 11%; /* Deep navy for text, softer than black */
+    /* ---- Surfaces ------------------------------------------------------ */
+    /* Warm paper rather than the old cool blue-grey. */
+    --background: 40 30% 99%;
+    --foreground: 222 22% 11%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card-foreground: 222 22% 11%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover-foreground: 222 22% 11%;
 
-    /* Primary: Vibrant Electric Blue */
-    --primary: 221 83% 53%; /* #3b82f6 - Bright, energetic */
+    /* Slightly recessed band for pull-quotes, promos, footers. */
+    --surface-sunken: 40 20% 96%;
+
+    /* ---- Brand --------------------------------------------------------- */
+    /*
+     * SAF blue, deepened. The old #3b82f6 (Tailwind blue-500) fails 4.5:1 as
+     * a link colour on white; this clears 7:1 and still reads as the same
+     * brand hue.
+     */
+    --primary: 221 68% 40%;
     --primary-foreground: 0 0% 100%;
-    --primary-light: 221 83% 65%;
-    --primary-dark: 221 83% 45%;
+    --primary-hover: 221 70% 33%;
+    --primary-subtle: 221 68% 96%;
 
-    /* Secondary: Deep Navy (Professional anchor) */
-    --secondary: 222 47% 11%;
+    --secondary: 222 22% 11%;
     --secondary-foreground: 0 0% 100%;
-    --secondary-light: 222 40% 20%;
 
-    /* Accent: Golden Amber (Fun & Highlight) */
-    --accent: 35 92% 58%; /* #f59e0b */
+    /* Amber, darkened enough to carry text. Emphasis only, never wallpaper. */
+    --accent: 32 80% 35%;
     --accent-foreground: 0 0% 100%;
-    --accent-light: 35 92% 65%;
+    --accent-subtle: 36 70% 95%;
 
-    /* Muted: Soft cool grays */
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215 16% 47%;
+    /* ---- Neutrals ------------------------------------------------------ */
+    --muted: 40 16% 95%;
+    --muted-foreground: 220 9% 42%;
 
-    --destructive: 0 84% 60%;
+    --destructive: 0 72% 42%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Border: Subtle borders */
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 221 83% 53%;
+    --success: 152 62% 30%;
+    --success-foreground: 0 0% 100%;
 
-    --radius: 1rem; /* More rounded, friendly UI */
+    /* Hairline rules are the primary structural device in this design. */
+    --border: 220 13% 86%;
+    --rule-strong: 222 16% 74%;
+    --input: 220 13% 86%;
+    --ring: 221 68% 40%;
 
-    /* Gradients */
-    --gradient-hero: linear-gradient(135deg, hsl(221 83% 53%), hsl(250 80% 60%)); /* Blue to Purple fun */
-    --gradient-warm: linear-gradient(135deg, hsl(35 92% 58%), hsl(14 90% 60%)); /* Amber to Orange */
-    --gradient-subtle: linear-gradient(180deg, hsl(210 40% 98%), hsl(0 0% 100%));
+    /* ---- Shape --------------------------------------------------------- */
+    /*
+     * A scale, not one value. The old design used 1rem plus rounded-full
+     * everywhere, which flattened all hierarchy.
+     */
+    --radius-sm: 2px;
+    --radius: 4px;
+    --radius-lg: 8px;
+    --radius-full: 9999px;
 
-    /* Shadows involving color */
-    --shadow-sm: 0 1px 2px 0 hsl(221 83% 53% / 0.05);
-    --shadow-md: 0 4px 6px -1px hsl(221 83% 53% / 0.1);
-    --shadow-lg: 0 10px 15px -3px hsl(221 83% 53% / 0.15);
-    --shadow-xl: 0 20px 25px -5px hsl(221 83% 53% / 0.2);
+    /* ---- Elevation ----------------------------------------------------- */
+    /* Two steps only, for genuine overlays. Cards use rules, not shadows. */
+    --shadow-overlay: 0 4px 12px -2px hsl(222 22% 11% / 0.10), 0 2px 4px -2px hsl(222 22% 11% / 0.06);
+    --shadow-raised: 0 12px 32px -8px hsl(222 22% 11% / 0.18);
 
-    /* Transitions */
-    --transition-base: all 0.2s ease-in-out;
-    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    /* ---- Motion -------------------------------------------------------- */
+    --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+    --ease-in: cubic-bezier(0.55, 0, 1, 0.45);
+    --duration-fast: 150ms;
+    --duration-base: 220ms;
+
+    /* ---- Editorial measure --------------------------------------------- */
+    --measure: 68ch;
 
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 222 47% 11%;
-    --sidebar-primary: 221 83% 53%;
+    --sidebar-foreground: 222 22% 11%;
+    --sidebar-primary: 221 68% 40%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 40% 96.1%;
-    --sidebar-accent-foreground: 222 47% 11%;
-    --sidebar-border: 214 32% 91%;
-    --sidebar-ring: 221 83% 53%;
+    --sidebar-accent: 40 16% 95%;
+    --sidebar-accent-foreground: 222 22% 11%;
+    --sidebar-border: 220 13% 89%;
+    --sidebar-ring: 221 68% 40%;
   }
 
   .dark {
-    /* Dark mode - Deep Blue/Black base, Neon accents */
-    --background: 222 47% 5%; /* Very deep blue-black */
-    --foreground: 210 40% 98%;
+    /*
+     * Re-derived for dark, not inverted. Surfaces are warm-neutral rather
+     * than the old near-black navy, and the brand blue is lightened so it
+     * still clears 4.5:1 against a dark background.
+     */
+    --background: 224 22% 8%;
+    --foreground: 210 18% 95%;
 
-    --card: 222 47% 7%;
-    --card-foreground: 210 40% 98%;
+    --card: 224 20% 11%;
+    --card-foreground: 210 18% 95%;
 
-    --popover: 222 47% 7%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 224 20% 12%;
+    --popover-foreground: 210 18% 95%;
 
-    /* Primary: Bright Neon Blue */
-    --primary: 217 91% 60%;
-    --primary-foreground: 222 47% 5%;
-    --primary-light: 217 91% 70%;
-    --primary-dark: 217 91% 50%;
+    --surface-sunken: 224 20% 12%;
 
-    /* Secondary: Lighter Navy */
-    --secondary: 217 19% 27%;
-    --secondary-foreground: 210 40% 98%;
-    --secondary-light: 217 19% 35%;
+    --primary: 215 88% 68%;
+    --primary-foreground: 224 30% 9%;
+    --primary-hover: 215 90% 76%;
+    --primary-subtle: 220 40% 18%;
 
-    /* Accent: Bright Amber/Yellow */
-    --accent: 35 92% 58%;
-    --accent-foreground: 0 0% 100%;
-    --accent-light: 35 92% 65%;
+    --secondary: 215 16% 26%;
+    --secondary-foreground: 210 18% 95%;
 
-    /* Muted */
-    --muted: 217 19% 27%;
-    --muted-foreground: 215 20% 65%;
+    --accent: 36 84% 62%;
+    --accent-foreground: 224 30% 9%;
+    --accent-subtle: 34 30% 18%;
 
-    --destructive: 0 62% 30%;
-    --destructive-foreground: 210 40% 98%;
+    --muted: 220 14% 17%;
+    --muted-foreground: 217 12% 68%;
 
-    --border: 217 19% 27%;
-    --input: 217 19% 27%;
-    --ring: 217 91% 60%;
+    --destructive: 0 70% 62%;
+    --destructive-foreground: 224 30% 9%;
 
-    /* Dark Mod Gradients */
-    --gradient-hero: linear-gradient(135deg, hsl(221 83% 53% / 0.5), hsl(250 80% 60% / 0.5));
-    --gradient-warm: linear-gradient(135deg, hsl(35 92% 58% / 0.5), hsl(14 90% 60% / 0.5));
-    --gradient-subtle: linear-gradient(180deg, hsl(222 47% 5%), hsl(222 47% 7%));
+    --success: 152 50% 58%;
+    --success-foreground: 224 30% 9%;
 
-    --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.3);
-    --shadow-md: 0 4px 6px -1px hsl(0 0% 0% / 0.4);
-    --shadow-lg: 0 10px 15px -3px hsl(0 0% 0% / 0.5);
-    --shadow-xl: 0 20px 25px -5px hsl(0 0% 0% / 0.6);
+    --border: 220 14% 20%;
+    --rule-strong: 220 12% 32%;
+    --input: 220 14% 24%;
+    --ring: 215 88% 68%;
 
-    --sidebar-background: 222 47% 7%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 217 91% 60%;
-    --sidebar-primary-foreground: 222 47% 5%;
-    --sidebar-accent: 217 19% 27%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217 19% 27%;
-    --sidebar-ring: 217 91% 60%;
+    --shadow-overlay: 0 4px 12px -2px hsl(0 0% 0% / 0.5), 0 2px 4px -2px hsl(0 0% 0% / 0.4);
+    --shadow-raised: 0 12px 32px -8px hsl(0 0% 0% / 0.6);
+
+    --sidebar-background: 224 20% 11%;
+    --sidebar-foreground: 210 18% 95%;
+    --sidebar-primary: 215 88% 68%;
+    --sidebar-primary-foreground: 224 30% 9%;
+    --sidebar-accent: 220 14% 17%;
+    --sidebar-accent-foreground: 210 18% 95%;
+    --sidebar-border: 220 14% 20%;
+    --sidebar-ring: 215 88% 68%;
   }
 }
 
@@ -146,204 +157,225 @@ All colors MUST be HSL.
     @apply border-border;
   }
 
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: var(--font-body);
-    font-size: 16px;
-    line-height: 1.65;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+    font-family: var(--font-body), system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 1rem;
+    line-height: 1.6;
+    /* Opt into contextual alternates and kerning; free polish. */
+    font-feature-settings: "kern", "liga", "calt";
+    text-rendering: optimizeLegibility;
   }
 
-  /* All headings use Poppins */
   h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-heading);
-    @apply font-bold tracking-tight;
-    line-height: 1.2;
+    font-family: var(--font-display), Georgia, "Times New Roman", serif;
+    @apply text-balance;
+    font-weight: 600;
+    letter-spacing: -0.014em;
+    line-height: 1.15;
   }
 
-  h1 {
-    @apply text-4xl md:text-5xl lg:text-6xl;
-    font-weight: 700;
-    letter-spacing: -0.02em;
+  /* Tabular figures stop dates and counts from jittering as they change. */
+  time, [data-numeric] {
+    font-variant-numeric: tabular-nums;
   }
 
-  h2 {
-    @apply text-3xl md:text-4xl lg:text-5xl;
-    font-weight: 700;
-    letter-spacing: -0.01em;
+  /* A visible, high-contrast focus ring on every interactive element. */
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
   }
 
-  h3 {
-    @apply text-2xl md:text-3xl;
+  ::selection {
+    background: hsl(var(--primary) / 0.18);
+  }
+}
+
+@layer components {
+  /**
+   * Article prose.
+   *
+   * Hand-rolled rather than @tailwindcss/typography so the editorial scale,
+   * measure and rule treatment stay in one place with the rest of the tokens.
+   * Body copy sets in the display serif at 19px/1.75 — the reading experience
+   * is the product.
+   */
+  .prose-editorial {
+    font-family: var(--font-display), Georgia, serif;
+    font-size: 1.1875rem;
+    line-height: 1.75;
+    color: hsl(var(--foreground));
+  }
+
+  .prose-editorial > * + * {
+    margin-top: 1.35em;
+  }
+
+  .prose-editorial h2,
+  .prose-editorial h3,
+  .prose-editorial h4 {
+    scroll-margin-top: 6rem; /* clears the sticky header on anchor jumps */
+  }
+
+  .prose-editorial h2 {
+    margin-top: 2.2em;
+    font-size: 1.7rem;
+    line-height: 1.25;
+  }
+
+  .prose-editorial h3 {
+    margin-top: 1.8em;
+    font-size: 1.35rem;
+    line-height: 1.3;
+  }
+
+  .prose-editorial a {
+    color: hsl(var(--primary));
+    text-decoration: underline;
+    text-underline-offset: 0.18em;
+    text-decoration-thickness: 1px;
+    transition: color var(--duration-fast) var(--ease-out);
+  }
+
+  .prose-editorial a:hover {
+    color: hsl(var(--primary-hover));
+  }
+
+  .prose-editorial strong {
     font-weight: 600;
   }
 
-  h4 {
-    @apply text-xl md:text-2xl;
-    font-weight: 600;
-  }
-
-  h5 {
-    @apply text-lg md:text-xl;
-    font-weight: 600;
-  }
-
-  h6 {
-    @apply text-base md:text-lg;
-    font-weight: 600;
-  }
-
-  /* Paragraphs use Inter with improved readability */
-  p {
-    font-family: var(--font-body);
-    line-height: 1.7;
-    margin-bottom: 1em;
-  }
-
-  /* Navigation, buttons, forms use Inter */
-  nav, button, input, textarea, select, label {
-    font-family: var(--font-body);
-  }
-
-  /* Blockquotes use Lora for storytelling */
-  blockquote {
-    font-family: var(--font-accent);
+  .prose-editorial blockquote {
+    margin-left: 0;
+    border-left: 2px solid hsl(var(--primary));
+    padding-left: 1.25rem;
     font-style: italic;
-    line-height: 1.7;
-    border-left: 3px solid hsl(var(--primary));
-    padding-left: 1.5rem;
-    margin: 1.5rem 0;
     color: hsl(var(--muted-foreground));
   }
 
-  /* Prose typography for blog content */
-  .prose {
-    font-family: var(--font-body);
-    color: hsl(var(--foreground));
+  .prose-editorial ul,
+  .prose-editorial ol {
+    padding-left: 1.4em;
   }
 
-  .prose h1,
-  .prose h2,
-  .prose h3,
-  .prose h4,
-  .prose h5,
-  .prose h6 {
-    font-family: var(--font-heading);
-    color: hsl(var(--foreground));
+  .prose-editorial ul {
+    list-style: disc;
   }
 
-  .prose p {
-    font-family: var(--font-body);
-    line-height: 1.7;
+  .prose-editorial ol {
+    list-style: decimal;
   }
 
-  .prose blockquote {
-    font-family: var(--font-accent);
-    font-style: italic;
+  .prose-editorial li + li {
+    margin-top: 0.4em;
   }
 
-  .prose strong {
+  .prose-editorial code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.86em;
+    background: hsl(var(--muted));
+    padding: 0.15em 0.35em;
+    border-radius: var(--radius-sm);
+  }
+
+  .prose-editorial pre {
+    background: hsl(var(--surface-sunken));
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    padding: 1rem;
+    overflow-x: auto;
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+
+  .prose-editorial pre code {
+    background: none;
+    padding: 0;
+  }
+
+  /* GFM tables — now that remark-gfm is enabled these actually render. */
+  .prose-editorial table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--font-body), system-ui, sans-serif;
+    font-size: 0.95rem;
+  }
+
+  .prose-editorial th,
+  .prose-editorial td {
+    border-bottom: 1px solid hsl(var(--border));
+    padding: 0.6rem 0.75rem;
+    text-align: left;
+  }
+
+  .prose-editorial th {
     font-weight: 600;
+    border-bottom-color: hsl(var(--rule-strong));
   }
 
-  .prose code {
-    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  .prose-editorial hr {
+    border: 0;
+    border-top: 1px solid hsl(var(--border));
+    margin: 2.5em 0;
   }
 }
 
 @layer utilities {
-  .gradient-hero {
-    background: var(--gradient-hero);
+  /** Constrain long-form text to a readable measure. */
+  .measure {
+    max-width: var(--measure);
   }
 
-  .gradient-warm {
-    background: var(--gradient-warm);
-  }
-
-  .gradient-subtle {
-    background: var(--gradient-subtle);
-  }
-
-  .shadow-elegant {
-    box-shadow: var(--shadow-lg);
-  }
-
-  .transition-base {
-    transition: var(--transition-base);
-  }
-
-  .transition-smooth {
-    transition: var(--transition-smooth);
-  }
-
-  /* Animation utilities */
-  .animate-on-scroll {
-    opacity: 0;
-    transform: translateY(20px);
-    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
-  }
-
-  .animate-on-scroll.visible {
+  /**
+   * Scroll-reveal.
+   *
+   * The old implementation set opacity: 0 here and relied on JavaScript to
+   * add `.visible`. With server-rendered HTML that meant crawlers and
+   * no-JS users saw a blank page — it would have silently defeated the
+   * entire migration. Content is visible by default; the animation is
+   * layered on only when JS has marked the document ready.
+   */
+  .reveal {
     opacity: 1;
-    transform: translateY(0);
   }
 
-  /* Smooth page transitions */
-  .page-enter {
-    animation: fade-in 0.4s ease-out;
+  [data-js-ready="true"] .reveal {
+    opacity: 0;
+    transform: translateY(12px);
+    transition:
+      opacity 400ms var(--ease-out),
+      transform 400ms var(--ease-out);
   }
 
-  .page-exit {
-    animation: fade-out 0.3s ease-in;
+  [data-js-ready="true"] .reveal[data-visible="true"] {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Honour the OS reduced-motion setting everywhere, including scroll-behavior. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
   }
 
-  /* Hover lift effect */
-  .hover-lift {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 
-  .hover-lift:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-lg);
+  [data-js-ready="true"] .reveal {
+    opacity: 1;
+    transform: none;
   }
-
-  /* Shimmer loading effect */
-  .shimmer-bg {
-    background: linear-gradient(
-      90deg,
-      hsl(var(--muted)) 0%,
-      hsl(var(--muted) / 0.5) 50%,
-      hsl(var(--muted)) 100%
-    );
-    background-size: 200% 100%;
-    animation: shimmer 2s infinite;
-  }
-
-  /* Gradient text animation */
-  .gradient-text {
-    background: var(--gradient-hero);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    background-size: 200% auto;
-    animation: gradient-shift 3s ease infinite;
-  }
-
-  /* Smooth focus transitions */
-  .focus-ring {
-    transition: box-shadow 0.2s ease;
-  }
-
-  .focus-ring:focus {
-    outline: none;
-    box-shadow: 0 0 0 3px hsl(var(--ring) / 0.3);
-  }
-
-  /* Stagger animation delay utilities */
-  .stagger-1 { animation-delay: 0.1s; }
-  .stagger-2 { animation-delay: 0.2s; }
-  .stagger-3 { animation-delay: 0.3s; }
-  .stagger-4 { animation-delay: 0.4s; }
-  .stagger-5 { animation-delay: 0.5s; }
 }

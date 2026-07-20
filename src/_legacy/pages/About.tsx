@@ -1,9 +1,9 @@
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
+import { Header } from "@/_legacy/components/layout/Header";
+import { Footer } from "@/_legacy/components/layout/Footer";
 import { Target, Eye, Heart } from "lucide-react";
 import { useScrollVisibility } from "@/hooks/use-scroll-animation";
-import { SEOHead } from "@/components/seo/SEOHead";
-import { OrganizationStructuredData } from "@/components/seo/StructuredData";
+import { SEOHead } from "@/_legacy/components/seo/SEOHead";
+import { OrganizationStructuredData } from "@/_legacy/components/seo/StructuredData";
 
 const About = () => {
   useScrollVisibility();

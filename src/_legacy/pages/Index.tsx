@@ -1,16 +1,16 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
-import { NewsletterSignup } from "@/components/newsletter/NewsletterSignup";
-import { PostCard } from "@/components/blog/PostCard";
-import { FeaturedPost } from "@/components/blog/FeaturedPost";
-import { BlogSidebar } from "@/components/blog/BlogSidebar";
+import { Header } from "@/_legacy/components/layout/Header";
+import { Footer } from "@/_legacy/components/layout/Footer";
+import { NewsletterSignup } from "@/_legacy/components/newsletter/NewsletterSignup";
+import { PostCard } from "@/_legacy/components/blog/PostCard";
+import { FeaturedPost } from "@/_legacy/components/blog/FeaturedPost";
+import { BlogSidebar } from "@/_legacy/components/blog/BlogSidebar";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowRight } from "lucide-react";
-import { SEOHead } from "@/components/seo/SEOHead";
-import { OrganizationStructuredData } from "@/components/seo/StructuredData";
+import { SEOHead } from "@/_legacy/components/seo/SEOHead";
+import { OrganizationStructuredData } from "@/_legacy/components/seo/StructuredData";
 import { useScrollVisibility } from "@/hooks/use-scroll-animation";
 
 interface Category {
