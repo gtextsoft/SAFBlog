@@ -20,11 +20,10 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false, nocache: true },
 };
 
-// Only routes that exist. Posts and Subscribers are still on the legacy Vite
-// app and get added here when they are migrated — a nav entry that 404s is
-// worse than a missing one.
+// Only routes that exist — a nav entry that 404s is worse than a missing one.
 const NAV = [
   { href: "/admin", label: "Dashboard" },
+  { href: "/admin/posts", label: "Posts" },
   { href: "/admin/promotions", label: "Promotions" },
 ];
 
