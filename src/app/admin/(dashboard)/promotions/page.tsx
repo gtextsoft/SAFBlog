@@ -2,18 +2,39 @@ import Link from "next/link";
 import { Megaphone, Plus } from "lucide-react";
 
 import { PromotionRow } from "@/components/admin/PromotionRow";
-import { isCurrentlyLive, listPromotions } from "@/lib/queries/admin-promotions";
+import {
+  isCurrentlyLive,
+  listPromotions,
+  PLACEMENT_LABEL,
+  winningPromotionsBySlot,
+  type AdminPromotion,
+  type PromotionPlacement,
+} from "@/lib/queries/admin-promotions";
 
 export const dynamic = "force-dynamic";
 
-const PLACEMENT_LABEL = {
-  sidebar: "Sidebar",
-  in_feed: "In feed",
-  in_article: "In article",
-} as const;
+function placementLabel(promotion: AdminPromotion): string {
+  return promotion.placements.map((slot) => PLACEMENT_LABEL[slot]).join(" · ");
+}
+
+/** Sponsors currently winning any of this campaign's slots (excluding itself). */
+function outrankedByNames(
+  promotion: AdminPromotion,
+  winners: Partial<Record<PromotionPlacement, AdminPromotion>>,
+): string[] {
+  const names = new Set<string>();
+  for (const slot of promotion.placements) {
+    const winner = winners[slot];
+    if (winner && winner.id !== promotion.id) {
+      names.add(winner.sponsorName);
+    }
+  }
+  return [...names];
+}
 
 export default async function PromotionsPage() {
   const promotions = await listPromotions();
+  const winners = winningPromotionsBySlot(promotions);
 
   const liveCount = promotions.filter((p) => isCurrentlyLive(p)).length;
   const totalClicks = promotions.reduce((sum, p) => sum + p.clicks, 0);
@@ -25,9 +46,8 @@ export default async function PromotionsPage() {
         <div>
           <h1 className="font-display text-3xl">Promotions</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Sponsored placements shown alongside articles. Every placement is labelled
-            &ldquo;Sponsored&rdquo; and its link marked <code className="text-xs">nofollow</code> for
-            readers and search engines.
+            Sponsored placements shown alongside articles. Tick multiple places on a campaign to
+            show it in several spots. Only the highest-priority live campaign wins each slot.
           </p>
         </div>
 
@@ -62,8 +82,8 @@ export default async function PromotionsPage() {
           <Megaphone className="mx-auto h-8 w-8 text-muted-foreground" aria-hidden="true" />
           <h2 className="mt-4 font-display text-xl">No promotions yet</h2>
           <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-            Create one to show a sponsored placement in the sidebar, between posts in the feed, or
-            partway through an article.
+            Create one to show a sponsored placement in the sidebar, homepage, Stories feed,
+            articles, or footer — and select more than one place if you want.
           </p>
           <Link
             href="/admin/promotions/new"
@@ -80,7 +100,8 @@ export default async function PromotionsPage() {
               key={promotion.id}
               promotion={promotion}
               live={isCurrentlyLive(promotion)}
-              placementLabel={PLACEMENT_LABEL[promotion.placement]}
+              placementLabel={placementLabel(promotion)}
+              outrankedBy={outrankedByNames(promotion, winners)}
             />
           ))}
         </ul>

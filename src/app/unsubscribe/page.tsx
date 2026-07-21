@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Mail } from "lucide-react";
 
 import { UnsubscribeForm } from "@/components/newsletter/UnsubscribeForm";
-import { SiteFooter } from "@/components/site/SiteFooter";
+import { PublicFooter } from "@/components/site/PublicFooter";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { CONTACT_EMAIL } from "@/lib/seo/site";
 
@@ -73,7 +73,7 @@ export default async function UnsubscribePage({
         </div>
       </main>
 
-      <SiteFooter />
+      <PublicFooter />
     </>
   );
 }

@@ -399,6 +399,7 @@ export type Database = {
           image_url: string | null
           impressions: number
           placement: Database["public"]["Enums"]["promotion_placement"]
+          placements: Database["public"]["Enums"]["promotion_placement"][]
           priority: number
           sponsor_name: string
           starts_at: string | null
@@ -417,6 +418,7 @@ export type Database = {
           image_url?: string | null
           impressions?: number
           placement?: Database["public"]["Enums"]["promotion_placement"]
+          placements?: Database["public"]["Enums"]["promotion_placement"][]
           priority?: number
           sponsor_name: string
           starts_at?: string | null
@@ -435,6 +437,7 @@ export type Database = {
           image_url?: string | null
           impressions?: number
           placement?: Database["public"]["Enums"]["promotion_placement"]
+          placements?: Database["public"]["Enums"]["promotion_placement"][]
           priority?: number
           sponsor_name?: string
           starts_at?: string | null
@@ -485,7 +488,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "editor" | "viewer"
-      promotion_placement: "sidebar" | "in_feed" | "in_article"
+      promotion_placement: "sidebar" | "in_feed" | "in_article" | "footer" | "home_feed"
       promotion_status: "draft" | "active" | "paused" | "ended"
     }
     CompositeTypes: {

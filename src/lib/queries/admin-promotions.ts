@@ -1,9 +1,26 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
+import type { PromotionPlacement } from "@/lib/types/promotion";
 
 export type PromotionStatus = "draft" | "active" | "paused" | "ended";
-export type PromotionPlacement = "sidebar" | "in_feed" | "in_article";
+export type { PromotionPlacement };
+
+export const ALL_PLACEMENTS: PromotionPlacement[] = [
+  "sidebar",
+  "in_feed",
+  "home_feed",
+  "in_article",
+  "footer",
+];
+
+export const PLACEMENT_LABEL: Record<PromotionPlacement, string> = {
+  sidebar: "Sidebar",
+  in_feed: "Between posts (Stories page)",
+  home_feed: "Homepage latest stories",
+  in_article: "Partway through an article",
+  footer: "Site footer",
+};
 
 export interface AdminPromotion {
   id: string;
@@ -13,7 +30,9 @@ export interface AdminPromotion {
   ctaLabel: string;
   targetUrl: string;
   sponsorName: string;
+  /** Primary slot (first selected). */
   placement: PromotionPlacement;
+  placements: PromotionPlacement[];
   status: PromotionStatus;
   priority: number;
   startsAt: string | null;
@@ -25,6 +44,10 @@ export interface AdminPromotion {
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 function map(row: any): AdminPromotion {
+  const placements = (row.placements?.length
+    ? row.placements
+    : [row.placement]) as PromotionPlacement[];
+
   return {
     id: row.id,
     title: row.title,
@@ -33,7 +56,8 @@ function map(row: any): AdminPromotion {
     ctaLabel: row.cta_label,
     targetUrl: row.target_url,
     sponsorName: row.sponsor_name,
-    placement: row.placement,
+    placement: (row.placement ?? placements[0]) as PromotionPlacement,
+    placements,
     status: row.status,
     priority: row.priority,
     startsAt: row.starts_at,
@@ -91,4 +115,24 @@ export function isCurrentlyLive(promotion: AdminPromotion, now = new Date()): bo
   if (promotion.startsAt && new Date(promotion.startsAt) > now) return false;
   if (promotion.endsAt && new Date(promotion.endsAt) <= now) return false;
   return true;
+}
+
+/**
+ * For each placement slot, which live campaign currently wins (highest priority).
+ * Used in the admin list so outranked campaigns are not mistaken for broken ones.
+ */
+export function winningPromotionsBySlot(
+  promotions: AdminPromotion[],
+): Partial<Record<PromotionPlacement, AdminPromotion>> {
+  const live = promotions.filter((p) => isCurrentlyLive(p));
+  const winners: Partial<Record<PromotionPlacement, AdminPromotion>> = {};
+
+  for (const slot of ALL_PLACEMENTS) {
+    const candidates = live
+      .filter((p) => p.placements.includes(slot))
+      .sort((a, b) => b.priority - a.priority || b.updatedAt.localeCompare(a.updatedAt));
+    if (candidates[0]) winners[slot] = candidates[0];
+  }
+
+  return winners;
 }

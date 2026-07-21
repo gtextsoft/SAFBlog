@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { SiteFooter } from "@/components/site/SiteFooter";
+import { PublicFooter } from "@/components/site/PublicFooter";
 import { SiteHeader } from "@/components/site/SiteHeader";
 
 /**
@@ -36,7 +36,7 @@ export default function NotFound() {
         </div>
       </main>
 
-      <SiteFooter />
+      <PublicFooter />
     </>
   );
 }

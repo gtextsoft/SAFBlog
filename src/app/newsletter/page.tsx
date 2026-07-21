@@ -3,7 +3,7 @@ import { BookOpen, Mail, ShieldCheck } from "lucide-react";
 
 import { SubscribeForm } from "@/components/newsletter/SubscribeForm";
 import { JsonLd } from "@/components/seo/JsonLd";
-import { SiteFooter } from "@/components/site/SiteFooter";
+import { PublicFooter } from "@/components/site/PublicFooter";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { breadcrumbSchema, jsonLdGraph } from "@/lib/seo/schema";
 import { absoluteUrl, SITE_LANGUAGE, SITE_NAME } from "@/lib/seo/site";
@@ -100,7 +100,7 @@ export default function NewsletterPage() {
         </div>
       </main>
 
-      <SiteFooter />
+      <PublicFooter />
     </>
   );
 }

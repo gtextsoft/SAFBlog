@@ -19,7 +19,7 @@ import {
   faqPageSchema,
   jsonLdGraph,
 } from "@/lib/seo/schema";
-import { SiteFooter } from "@/components/site/SiteFooter";
+import { PublicFooter } from "@/components/site/PublicFooter";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { formatPostDate } from "@/lib/format";
 import { getApprovedComments } from "@/lib/queries/comments";
@@ -392,7 +392,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
         )}
       </main>
 
-      <SiteFooter />
+      <PublicFooter />
     </>
   );
 }

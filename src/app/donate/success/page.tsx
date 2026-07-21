@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { SiteFooter } from "@/components/site/SiteFooter";
+import { PublicFooter } from "@/components/site/PublicFooter";
 import { SiteHeader } from "@/components/site/SiteHeader";
 
 export const metadata: Metadata = {
@@ -35,7 +35,7 @@ export default function DonateSuccessPage() {
           </Link>
         </div>
       </main>
-      <SiteFooter />
+      <PublicFooter />
     </>
   );
 }

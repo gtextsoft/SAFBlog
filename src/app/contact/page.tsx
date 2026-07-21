@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 import { ContactForm } from "@/components/contact/ContactForm";
 import { JsonLd } from "@/components/seo/JsonLd";
-import { SiteFooter } from "@/components/site/SiteFooter";
+import { PublicFooter } from "@/components/site/PublicFooter";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { breadcrumbSchema, jsonLdGraph, organisationSchema } from "@/lib/seo/schema";
 import { absoluteUrl, CONTACT_EMAIL, SITE_LANGUAGE, SITE_NAME } from "@/lib/seo/site";
@@ -62,7 +62,7 @@ export default function ContactPage() {
         </div>
       </main>
 
-      <SiteFooter />
+      <PublicFooter />
     </>
   );
 }

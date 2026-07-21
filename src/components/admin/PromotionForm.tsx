@@ -6,7 +6,12 @@ import { useFormStatus } from "react-dom";
 import { ImagePlus, Loader2 } from "lucide-react";
 
 import { uploadPromotionImage, type ActionState } from "@/app/admin/(dashboard)/promotions/actions";
-import type { AdminPromotion } from "@/lib/queries/admin-promotions";
+import {
+  ALL_PLACEMENTS,
+  PLACEMENT_LABEL,
+  type AdminPromotion,
+  type PromotionPlacement,
+} from "@/lib/queries/admin-promotions";
 import { SidebarPromotion } from "@/components/promotions/PromotionSlot";
 import { cn } from "@/lib/utils";
 
@@ -94,8 +99,27 @@ export function PromotionForm({
     imageUrl: promotion?.imageUrl ?? "",
   });
 
+  const [selectedPlacements, setSelectedPlacements] = useState<PromotionPlacement[]>(
+    promotion?.placements?.length
+      ? promotion.placements
+      : promotion?.placement
+        ? [promotion.placement]
+        : ["sidebar"],
+  );
+
   const set = (key: keyof typeof preview) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setPreview((p) => ({ ...p, [key]: e.target.value }));
+
+  function togglePlacement(slot: PromotionPlacement) {
+    setSelectedPlacements((current) => {
+      if (current.includes(slot)) {
+        // Keep at least one slot selected.
+        if (current.length === 1) return current;
+        return current.filter((s) => s !== slot);
+      }
+      return [...current, slot];
+    });
+  }
 
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -297,34 +321,54 @@ export function PromotionForm({
         <fieldset className="space-y-4 rounded-lg border border-border bg-card p-5">
           <legend className="px-1 text-sm font-medium">Placement &amp; schedule</legend>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Where it shows" htmlFor="placement" required>
-              <select
-                id="placement"
-                name="placement"
-                defaultValue={promotion?.placement ?? "sidebar"}
-                className={inputClass}
-              >
-                <option value="sidebar">Sidebar</option>
-                <option value="in_feed">Between posts in the feed</option>
-                <option value="in_article">Partway through an article</option>
-              </select>
-            </Field>
+          <Field
+            label="Where it shows"
+            htmlFor="placements"
+            required
+            hint="Select every place this campaign should appear. One promotion can show in several spots at once."
+            error={errors.placements}
+          >
+            <div
+              id="placements"
+              role="group"
+              aria-label="Placement slots"
+              className="space-y-2 rounded border border-input bg-background p-3"
+            >
+              {ALL_PLACEMENTS.map((slot) => {
+                const checked = selectedPlacements.includes(slot);
+                return (
+                  <label
+                    key={slot}
+                    className="flex min-h-11 cursor-pointer items-center gap-3 text-sm"
+                  >
+                    <input
+                      type="checkbox"
+                      name="placements"
+                      value={slot}
+                      checked={checked}
+                      onChange={() => togglePlacement(slot)}
+                      className="h-4 w-4 rounded border-input"
+                    />
+                    <span>{PLACEMENT_LABEL[slot]}</span>
+                  </label>
+                );
+              })}
+            </div>
+          </Field>
 
-            <Field label="Status" htmlFor="status" required>
-              <select
-                id="status"
-                name="status"
-                defaultValue={promotion?.status ?? "draft"}
-                className={inputClass}
-              >
-                <option value="draft">Draft — not shown</option>
-                <option value="active">Active</option>
-                <option value="paused">Paused</option>
-                <option value="ended">Ended</option>
-              </select>
-            </Field>
-          </div>
+          <Field label="Status" htmlFor="status" required>
+            <select
+              id="status"
+              name="status"
+              defaultValue={promotion?.status ?? "draft"}
+              className={inputClass}
+            >
+              <option value="draft">Draft — not shown</option>
+              <option value="active">Active</option>
+              <option value="paused">Paused</option>
+              <option value="ended">Ended</option>
+            </select>
+          </Field>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <Field
@@ -361,7 +405,7 @@ export function PromotionForm({
           <Field
             label="Priority"
             htmlFor="priority"
-            hint="Higher wins when several promotions compete for the same slot."
+            hint="Higher wins when several promotions compete for the same slot. Only one campaign is shown per slot — if yours is active but missing, another live campaign likely has a higher priority."
             error={errors.priority}
           >
             <input
@@ -390,7 +434,7 @@ export function PromotionForm({
       <aside className="lg:sticky lg:top-8 lg:self-start">
         <h2 className="text-eyebrow uppercase text-muted-foreground">Preview</h2>
         <p className="mt-1 text-xs text-muted-foreground">
-          How the sidebar placement will look to a reader.
+          Sidebar preview. Other placements use the same creative with a different layout.
         </p>
 
         <div className="mt-3">
@@ -404,6 +448,7 @@ export function PromotionForm({
               targetUrl: "#",
               sponsorName: preview.sponsorName || "Sponsor name",
               placement: "sidebar",
+              placements: selectedPlacements,
             }}
           />
         </div>

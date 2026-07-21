@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { SiteFooter } from "@/components/site/SiteFooter";
+import { PublicFooter } from "@/components/site/PublicFooter";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { confirmSubscription } from "@/app/newsletter/actions";
 
@@ -37,7 +37,7 @@ export default async function ConfirmNewsletterPage({
           </Link>
         </p>
       </main>
-      <SiteFooter />
+      <PublicFooter />
     </>
   );
 }

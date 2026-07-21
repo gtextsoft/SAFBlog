@@ -7,7 +7,7 @@ import { PostCard } from "@/components/blog/PostCard";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { InFeedPromotion } from "@/components/promotions/PromotionSlot";
 import { blogSchema, breadcrumbSchema, collectionSchema, jsonLdGraph } from "@/lib/seo/schema";
-import { SiteFooter } from "@/components/site/SiteFooter";
+import { PublicFooter } from "@/components/site/PublicFooter";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { getPublishedPosts, POSTS_PER_PAGE } from "@/lib/queries/posts";
 import { getPromotions } from "@/lib/queries/promotions";
@@ -124,7 +124,7 @@ export default async function BlogPage({
         </div>
       </main>
 
-      <SiteFooter />
+      <PublicFooter />
     </>
   );
 }

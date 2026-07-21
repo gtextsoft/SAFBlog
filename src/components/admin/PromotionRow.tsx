@@ -1,5 +1,3 @@
-"use client";
-
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { Pause, Pencil, Play, Trash2 } from "lucide-react";
@@ -34,10 +32,13 @@ export function PromotionRow({
   promotion,
   live,
   placementLabel,
+  outrankedBy,
 }: {
   promotion: AdminPromotion;
   live: boolean;
   placementLabel: string;
+  /** Names of higher-priority campaigns currently winning shared slots. */
+  outrankedBy?: string[];
 }) {
   const [pending, startTransition] = useTransition();
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -86,6 +87,14 @@ export function PromotionRow({
           {scheduledButNotLive && (
             <p className="mt-2 text-xs text-accent">
               Marked active but outside its scheduled window, so it is not being shown.
+            </p>
+          )}
+
+          {live && outrankedBy && outrankedBy.length > 0 && (
+            <p className="mt-2 text-xs text-accent">
+              Active, but outranked on its slot
+              {outrankedBy.length === 1 ? "" : "s"} by {outrankedBy.join(", ")}. Raise priority to
+              take over, or pause the other campaign.
             </p>
           )}
         </div>

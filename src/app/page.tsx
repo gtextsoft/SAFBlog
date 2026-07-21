@@ -1,18 +1,28 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { Fragment } from "react";
 
 import { FeaturedPostCard, PostCard } from "@/components/blog/PostCard";
 import { BlogSidebar } from "@/components/blog/BlogSidebar";
-import { SiteFooter } from "@/components/site/SiteFooter";
+import { InFeedPromotion } from "@/components/promotions/PromotionSlot";
+import { PublicFooter } from "@/components/site/PublicFooter";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { getPublishedPosts } from "@/lib/queries/posts";
+import { getPromotions } from "@/lib/queries/promotions";
 import { SITE_TAGLINE } from "@/lib/seo/site";
 
 export const revalidate = 60;
 
+/** Insert the homepage feed promotion after this many latest-story cards. */
+const HOME_PROMO_AFTER = 2;
+
 export default async function HomePage() {
-  const { items: posts } = await getPublishedPosts(1, 7);
+  const [{ items: posts }, homePromotions] = await Promise.all([
+    getPublishedPosts(1, 7),
+    getPromotions("home_feed", 1),
+  ]);
   const [featured, ...rest] = posts;
+  const homePromotion = homePromotions[0];
 
   return (
     <>
@@ -86,8 +96,13 @@ export default async function HomePage() {
                     </div>
 
                     <div className="mt-8 grid gap-x-8 gap-y-12 sm:grid-cols-2">
-                      {rest.map((post) => (
-                        <PostCard key={post.id} post={post} />
+                      {rest.map((post, index) => (
+                        <Fragment key={post.id}>
+                          <PostCard post={post} />
+                          {homePromotion && index === HOME_PROMO_AFTER - 1 && (
+                            <InFeedPromotion promotion={homePromotion} />
+                          )}
+                        </Fragment>
                       ))}
                     </div>
                   </section>
@@ -102,7 +117,7 @@ export default async function HomePage() {
         </div>
       </main>
 
-      <SiteFooter />
+      <PublicFooter />
     </>
   );
 }

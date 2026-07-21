@@ -5,7 +5,7 @@ import { Search } from "lucide-react";
 import { Pagination } from "@/components/blog/Pagination";
 import { PostCard } from "@/components/blog/PostCard";
 import { JsonLd } from "@/components/seo/JsonLd";
-import { SiteFooter } from "@/components/site/SiteFooter";
+import { PublicFooter } from "@/components/site/PublicFooter";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { breadcrumbSchema, jsonLdGraph } from "@/lib/seo/schema";
 import { POSTS_PER_PAGE, searchPosts } from "@/lib/queries/posts";
@@ -166,7 +166,7 @@ export default async function SearchPage({
         </div>
       </main>
 
-      <SiteFooter />
+      <PublicFooter />
     </>
   );
 }

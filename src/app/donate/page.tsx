@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 
 import { JsonLd } from "@/components/seo/JsonLd";
-import { SiteFooter } from "@/components/site/SiteFooter";
+import { PublicFooter } from "@/components/site/PublicFooter";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { getDonationPaymentLink } from "@/lib/donate";
 import { breadcrumbSchema, jsonLdGraph, organisationSchema } from "@/lib/seo/schema";
@@ -89,7 +89,7 @@ export default function DonatePage() {
         </div>
       </main>
 
-      <SiteFooter />
+      <PublicFooter />
     </>
   );
 }

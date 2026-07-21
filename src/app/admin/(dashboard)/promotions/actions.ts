@@ -18,6 +18,8 @@ async function requireAdmin() {
   return supabase;
 }
 
+const PlacementEnum = z.enum(["sidebar", "in_feed", "in_article", "home_feed", "footer"]);
+
 const PromotionSchema = z
   .object({
     title: z.string().trim().min(1, "Title is required").max(120),
@@ -32,7 +34,9 @@ const PromotionSchema = z
       .refine((u) => /^https?:\/\//i.test(u), "Link must start with http:// or https://"),
     ctaLabel: z.string().trim().min(1).max(40),
     imageUrl: z.string().trim().url().optional().or(z.literal("")),
-    placement: z.enum(["sidebar", "in_feed", "in_article"]),
+    placements: z
+      .array(PlacementEnum)
+      .min(1, "Choose at least one place for this promotion to appear"),
     status: z.enum(["draft", "active", "paused", "ended"]),
     priority: z.coerce.number().int().min(0).max(100),
     startsAt: z.string().optional().or(z.literal("")),
@@ -62,14 +66,21 @@ export interface ActionState {
 function revalidatePromotionSurfaces() {
   revalidatePath("/admin/promotions");
 
-  revalidatePath("/"); // home — sidebar slot
-  revalidatePath("/blog"); // index — in-feed and sidebar slots
+  revalidatePath("/"); // home — sidebar + home_feed
+  revalidatePath("/blog"); // index — in-feed and sidebar
   revalidatePath("/blog/[slug]", "page"); // articles — in-article and sidebar
   revalidatePath("/category/[slug]", "page");
   revalidatePath("/tag/[slug]", "page");
+  // Footer appears on every public page; layout invalidation covers shared chrome.
+  revalidatePath("/", "layout");
 }
 
 function parse(formData: FormData) {
+  const placements = formData
+    .getAll("placements")
+    .map((v) => String(v))
+    .filter(Boolean);
+
   return PromotionSchema.safeParse({
     title: formData.get("title"),
     body: formData.get("body"),
@@ -77,7 +88,7 @@ function parse(formData: FormData) {
     targetUrl: formData.get("targetUrl"),
     ctaLabel: formData.get("ctaLabel"),
     imageUrl: formData.get("imageUrl"),
-    placement: formData.get("placement"),
+    placements,
     status: formData.get("status"),
     priority: formData.get("priority"),
     startsAt: formData.get("startsAt"),
@@ -86,6 +97,9 @@ function parse(formData: FormData) {
 }
 
 function toRow(v: z.infer<typeof PromotionSchema>) {
+  // Deduplicate while preserving checkbox order (first = primary/legacy placement).
+  const placements = [...new Set(v.placements)];
+
   return {
     title: v.title,
     body: v.body || null,
@@ -93,7 +107,8 @@ function toRow(v: z.infer<typeof PromotionSchema>) {
     target_url: v.targetUrl,
     cta_label: v.ctaLabel,
     image_url: v.imageUrl || null,
-    placement: v.placement,
+    placements,
+    placement: placements[0],
     status: v.status,
     priority: v.priority,
     // datetime-local gives a value with no zone; treat it as the admin's

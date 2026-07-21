@@ -4,7 +4,7 @@ import { BlogSidebar } from "@/components/blog/BlogSidebar";
 import { Pagination } from "@/components/blog/Pagination";
 import { PostCard } from "@/components/blog/PostCard";
 import { JsonLd } from "@/components/seo/JsonLd";
-import { SiteFooter } from "@/components/site/SiteFooter";
+import { PublicFooter } from "@/components/site/PublicFooter";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { breadcrumbSchema, collectionSchema, jsonLdGraph } from "@/lib/seo/schema";
 import type { Paginated, PostSummary } from "@/types/blog";
@@ -122,7 +122,7 @@ export function TaxonomyArchive({
         </div>
       </main>
 
-      <SiteFooter />
+      <PublicFooter />
     </>
   );
 }

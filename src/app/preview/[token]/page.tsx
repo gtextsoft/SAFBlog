@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { PostBody } from "@/components/blog/PostBody";
-import { SiteFooter } from "@/components/site/SiteFooter";
+import { PublicFooter } from "@/components/site/PublicFooter";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { getPostByPreviewToken } from "@/lib/queries/posts";
 
@@ -57,7 +57,7 @@ export default async function PreviewPage({
           <PostBody content={post.content} />
         </div>
       </main>
-      <SiteFooter />
+      <PublicFooter />
     </>
   );
 }

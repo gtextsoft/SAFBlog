@@ -6,7 +6,7 @@ import { notFound } from "next/navigation";
 import { Pagination } from "@/components/blog/Pagination";
 import { PostCard } from "@/components/blog/PostCard";
 import { JsonLd } from "@/components/seo/JsonLd";
-import { SiteFooter } from "@/components/site/SiteFooter";
+import { PublicFooter } from "@/components/site/PublicFooter";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { getAuthorBySlug, getPostsByAuthor } from "@/lib/queries/authors";
 import { POSTS_PER_PAGE } from "@/lib/queries/posts";
@@ -145,7 +145,7 @@ export default async function AuthorPage({
         </div>
       </main>
 
-      <SiteFooter />
+      <PublicFooter />
     </>
   );
 }

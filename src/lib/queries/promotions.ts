@@ -3,20 +3,9 @@ import "server-only";
 import { cache } from "react";
 
 import { createPublicClient } from "@/lib/supabase/public";
+import type { Promotion, PromotionPlacement } from "@/lib/types/promotion";
 
-export type PromotionPlacement = "sidebar" | "in_feed" | "in_article";
-
-export interface Promotion {
-  id: string;
-  title: string;
-  body: string | null;
-  imageUrl: string | null;
-  ctaLabel: string;
-  /** Never rendered as an href — clicks route through /go/[id]. */
-  targetUrl: string;
-  sponsorName: string;
-  placement: PromotionPlacement;
-}
+export type { Promotion, PromotionPlacement };
 
 /**
  * Live promotions for a slot, highest priority first.
@@ -31,8 +20,10 @@ export const getPromotions = cache(
 
     const { data, error } = await supabase
       .from("promotions")
-      .select("id, title, body, image_url, cta_label, target_url, sponsor_name, placement")
-      .eq("placement", placement)
+      .select(
+        "id, title, body, image_url, cta_label, target_url, sponsor_name, placement, placements",
+      )
+      .contains("placements", [placement])
       .order("priority", { ascending: false })
       .order("created_at", { ascending: false })
       .limit(limit);
@@ -52,6 +43,7 @@ export const getPromotions = cache(
       targetUrl: row.target_url,
       sponsorName: row.sponsor_name,
       placement: row.placement as PromotionPlacement,
+      placements: (row.placements ?? [row.placement]) as PromotionPlacement[],
     }));
   },
 );

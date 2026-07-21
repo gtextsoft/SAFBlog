@@ -2,7 +2,7 @@ import { ArrowUpRight } from "lucide-react";
 
 import { PromotionImage } from "@/components/promotions/PromotionImage";
 
-import type { Promotion } from "@/lib/queries/promotions";
+import type { Promotion } from "@/lib/types/promotion";
 import { cn } from "@/lib/utils";
 
 /**
@@ -165,6 +165,43 @@ export function InArticlePromotion({ promotion, className }: PromotionProps) {
           <span className="sr-only">(sponsored link, opens in a new tab)</span>
         </a>
       </div>
+    </aside>
+  );
+}
+
+/** Compact footer column placement. */
+export function FooterPromotion({ promotion, className }: PromotionProps) {
+  return (
+    <aside
+      aria-label={`Sponsored content from ${promotion.sponsorName}`}
+      className={cn("rounded-lg border border-border bg-background p-4", className)}
+    >
+      <SponsoredLabel sponsor={promotion.sponsorName} />
+
+      {promotion.imageUrl && (
+        <PromotionImage
+          src={promotion.imageUrl}
+          aspect="aspect-[16/10]"
+          sizes="(max-width: 640px) 100vw, 240px"
+          className="mt-3"
+        />
+      )}
+
+      <h3 className="mt-3 text-base leading-snug">{promotion.title}</h3>
+      {promotion.body && (
+        <p className="mt-1.5 line-clamp-2 text-sm text-muted-foreground">{promotion.body}</p>
+      )}
+
+      <a
+        href={`/go/${promotion.id}`}
+        rel="sponsored nofollow noopener"
+        target="_blank"
+        className="mt-3 inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-primary transition-colors duration-150 hover:text-primary-hover"
+      >
+        {promotion.ctaLabel}
+        <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
+        <span className="sr-only">(sponsored link, opens in a new tab)</span>
+      </a>
     </aside>
   );
 }
