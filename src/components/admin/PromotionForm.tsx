@@ -11,7 +11,7 @@ import {
   PLACEMENT_LABEL,
   type AdminPromotion,
   type PromotionPlacement,
-} from "@/lib/queries/admin-promotions";
+} from "@/lib/types/promotion";
 import { SidebarPromotion } from "@/components/promotions/PromotionSlot";
 import { cn } from "@/lib/utils";
 

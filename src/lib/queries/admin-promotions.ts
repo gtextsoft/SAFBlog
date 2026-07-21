@@ -1,46 +1,14 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
-import type { PromotionPlacement } from "@/lib/types/promotion";
+import {
+  ALL_PLACEMENTS,
+  type AdminPromotion,
+  type PromotionPlacement,
+} from "@/lib/types/promotion";
 
-export type PromotionStatus = "draft" | "active" | "paused" | "ended";
-export type { PromotionPlacement };
-
-export const ALL_PLACEMENTS: PromotionPlacement[] = [
-  "sidebar",
-  "in_feed",
-  "home_feed",
-  "in_article",
-  "footer",
-];
-
-export const PLACEMENT_LABEL: Record<PromotionPlacement, string> = {
-  sidebar: "Sidebar",
-  in_feed: "Between posts (Stories page)",
-  home_feed: "Homepage latest stories",
-  in_article: "Partway through an article",
-  footer: "Site footer",
-};
-
-export interface AdminPromotion {
-  id: string;
-  title: string;
-  body: string | null;
-  imageUrl: string | null;
-  ctaLabel: string;
-  targetUrl: string;
-  sponsorName: string;
-  /** Primary slot (first selected). */
-  placement: PromotionPlacement;
-  placements: PromotionPlacement[];
-  status: PromotionStatus;
-  priority: number;
-  startsAt: string | null;
-  endsAt: string | null;
-  impressions: number;
-  clicks: number;
-  updatedAt: string;
-}
+export type { AdminPromotion, PromotionPlacement, PromotionStatus } from "@/lib/types/promotion";
+export { ALL_PLACEMENTS, PLACEMENT_LABEL } from "@/lib/types/promotion";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 function map(row: any): AdminPromotion {

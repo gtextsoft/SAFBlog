@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { Pause, Pencil, Play, Trash2 } from "lucide-react";
@@ -6,7 +8,7 @@ import {
   deletePromotion,
   setPromotionStatus,
 } from "@/app/admin/(dashboard)/promotions/actions";
-import type { AdminPromotion } from "@/lib/queries/admin-promotions";
+import type { AdminPromotion } from "@/lib/types/promotion";
 import { cn } from "@/lib/utils";
 
 const STATUS_STYLE: Record<AdminPromotion["status"], string> = {
