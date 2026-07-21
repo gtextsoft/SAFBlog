@@ -6,6 +6,13 @@ const supabaseHost = process.env.NEXT_PUBLIC_SUPABASE_URL
 const nextConfig = {
   reactStrictMode: true,
 
+  // TipTap HTML (and rare data-URL images) can exceed the default 1 MB Server Action limit.
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "5mb",
+    },
+  },
+
   images: {
     // AVIF first, WebP as the fallback for older clients.
     formats: ["image/avif", "image/webp"],

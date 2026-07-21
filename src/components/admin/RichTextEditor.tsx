@@ -108,6 +108,7 @@ export function RichTextEditor({
         HTMLAttributes: { rel: "noopener noreferrer", target: "_blank" },
       }),
       Image.configure({
+        allowBase64: false,
         HTMLAttributes: { class: "rounded max-w-full h-auto" },
       }),
       TextAlign.configure({ types: ["heading", "paragraph"] }),

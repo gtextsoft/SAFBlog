@@ -119,9 +119,9 @@ interface TaxonomyPostRow {
 /**
  * Posts in a taxonomy term, paginated.
  *
- * The old category/tag pages fetched every matching post with no limit. The
- * inner-join filter syntax (`post_categories!inner`) lets one query do the
- * filtering and the counting.
+ * Uses a single `!inner` embed for the filter relation (not a duplicate of the
+ * same relation), because PostgREST rejects `count=exact` when a relation is
+ * selected twice ("aggregate functions are not allowed in FROM…").
  */
 async function getPostsByTaxonomy(
   relation: "post_categories" | "post_tags",
@@ -133,15 +133,24 @@ async function getPostsByTaxonomy(
   const supabase = createPublicClient();
   const from = (page - 1) * perPage;
 
+  const categoriesEmbed =
+    relation === "post_categories"
+      ? `post_categories!inner(category_id, category:categories(id, name, slug, description))`
+      : `post_categories(category:categories(id, name, slug, description))`;
+
+  const tagsEmbed =
+    relation === "post_tags"
+      ? `post_tags!inner(tag_id, tag:tags(id, name, slug))`
+      : `post_tags(tag:tags(id, name, slug))`;
+
   const { data, error, count } = await supabase
     .from("posts")
     .select(
       `
         id, title, slug, excerpt, content, cover_image_url, published_at, updated_at,
         author:authors(id, full_name, role, bio, avatar_url),
-        post_categories(category:categories(id, name, slug, description)),
-        post_tags(tag:tags(id, name, slug)),
-        ${relation}!inner(${column})
+        ${categoriesEmbed},
+        ${tagsEmbed}
       `,
       { count: "exact" },
     )
