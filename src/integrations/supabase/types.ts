@@ -457,6 +457,23 @@ export type Database = {
         }
         Returns: boolean
       }
+      newsletter_confirm: {
+        Args: { p_email: string; p_secret: string }
+        Returns: boolean
+      }
+      newsletter_ensure_secret: {
+        Args: { p_secret: string }
+        Returns: undefined
+      }
+      newsletter_request_resubscribe: {
+        Args: {
+          p_email: string
+          p_full_name: string
+          p_source: string
+          p_secret: string
+        }
+        Returns: string
+      }
       record_promotion_click: {
         Args: { _promotion_id: string }
         Returns: string

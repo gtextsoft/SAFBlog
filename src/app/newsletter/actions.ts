@@ -9,10 +9,10 @@ import {
   isEmailConfigured,
   sendEmail,
 } from "@/lib/email/resend";
-import { signToken } from "@/lib/newsletter/token";
+import { ensureNewsletterSecret } from "@/lib/newsletter/secret";
+import { newsletterTokenSecret, signToken } from "@/lib/newsletter/token";
 import { clientIpFromHeaders, rateLimit } from "@/lib/rate-limit";
 import { createPublicClient } from "@/lib/supabase/public";
-import { createServiceClient } from "@/lib/supabase/service";
 
 export interface SubscribeState {
   status: "idle" | "success" | "error";
@@ -30,16 +30,15 @@ const SubscribeSchema = z.object({
 const SUCCESS_MESSAGE =
   "Check your inbox for a confirmation link to finish subscribing.";
 
-async function sendConfirmation(email: string): Promise<void> {
+async function sendConfirmation(email: string): Promise<{ ok: true } | { ok: false; error: string }> {
   if (!isEmailConfigured()) {
-    console.warn("subscribe: RESEND not configured; skipping confirmation email");
-    return;
+    return { ok: false, error: "Email is not configured (RESEND_API_KEY)." };
   }
 
   try {
     const token = await signToken(email);
     const url = confirmUrl(token, email);
-    await sendEmail({
+    return sendEmail({
       to: email,
       subject: "Confirm your subscription",
       html: confirmationEmailHtml(url),
@@ -47,6 +46,10 @@ async function sendConfirmation(email: string): Promise<void> {
     });
   } catch (err) {
     console.error("sendConfirmation", err);
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "Could not send confirmation email.",
+    };
   }
 }
 
@@ -98,27 +101,24 @@ export async function subscribe(
   if (error) {
     if (error.code === "23505") {
       try {
-        const service = createServiceClient();
-        const { data: existing } = await service
-          .from("newsletter_subscribers")
-          .select("id, status")
-          .eq("email", email)
-          .maybeSingle();
+        await ensureNewsletterSecret();
+        const secret = newsletterTokenSecret();
+        const { data: outcome, error: rpcError } = await supabase.rpc(
+          "newsletter_request_resubscribe",
+          {
+            p_email: email,
+            p_full_name: fullName || "",
+            p_source: source || "website",
+            p_secret: secret,
+          },
+        );
 
-        if (existing && existing.status !== "subscribed") {
-          await service
-            .from("newsletter_subscribers")
-            .update({
-              status: "pending",
-              unsubscribed_at: null,
-              confirmed_at: null,
-              full_name: fullName || null,
-              source: source || "website",
-            })
-            .eq("id", existing.id);
-          await sendConfirmation(email);
+        if (rpcError) {
+          console.error("subscribe resubscribe rpc", rpcError.message);
+        } else if (outcome === "pending") {
+          const sent = await sendConfirmation(email);
+          if (!sent.ok) console.error("subscribe resend confirm", sent.error);
         }
-        // Already subscribed: still return same message; optionally re-send nothing.
       } catch (err) {
         console.error("subscribe conflict path", err);
       }
@@ -133,7 +133,15 @@ export async function subscribe(
     };
   }
 
-  await sendConfirmation(email);
+  const sent = await sendConfirmation(email);
+  if (!sent.ok) {
+    console.error("subscribe confirmation send", sent.error);
+    return {
+      status: "error",
+      message: `Signed up, but confirmation email failed: ${sent.error}`,
+    };
+  }
+
   return { status: "success", message: SUCCESS_MESSAGE };
 }
 
@@ -167,15 +175,12 @@ export async function confirmSubscription(
   }
 
   try {
-    const service = createServiceClient();
-    const { error } = await service
-      .from("newsletter_subscribers")
-      .update({
-        status: "subscribed",
-        confirmed_at: new Date().toISOString(),
-        unsubscribed_at: null,
-      })
-      .eq("email", email);
+    await ensureNewsletterSecret();
+    const supabase = createPublicClient();
+    const { error } = await supabase.rpc("newsletter_confirm", {
+      p_email: email,
+      p_secret: newsletterTokenSecret(),
+    });
 
     if (error) {
       console.error("confirmSubscription", error.message);
@@ -185,7 +190,7 @@ export async function confirmSubscription(
       };
     }
   } catch (err) {
-    console.error("confirmSubscription service", err);
+    console.error("confirmSubscription", err);
     return {
       status: "error",
       message: "Confirmation is temporarily unavailable. Please try again later.",

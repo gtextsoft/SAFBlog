@@ -41,7 +41,7 @@ function timingSafeEqual(a: Uint8Array, b: Uint8Array): boolean {
 }
 
 export function newsletterTokenSecret(): string {
-  const secret = process.env.NEWSLETTER_TOKEN_SECRET;
+  const secret = process.env.NEWSLETTER_TOKEN_SECRET?.trim().replace(/^["']|["']$/g, "");
   if (!secret) {
     throw new Error(
       "Missing NEWSLETTER_TOKEN_SECRET. Set the same value used by the unsubscribe Edge Function.",

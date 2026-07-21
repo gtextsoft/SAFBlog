@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
-import { uploadImage } from "@/app/admin/(dashboard)/media/actions";
+import { uploadBlogImage } from "@/lib/storage/upload";
 import { requireRole } from "@/lib/auth/require-role";
 import { randomToken, slugify } from "@/lib/slugify";
 import { createClient } from "@/lib/supabase/server";
@@ -375,5 +375,10 @@ export async function createAuthor(fullName: string): Promise<{ error?: string; 
 }
 
 export async function uploadCoverImage(formData: FormData): Promise<{ url?: string; error?: string }> {
-  return uploadImage(formData, "posts");
+  return uploadBlogImage(formData, "posts");
+}
+
+/** Inline images for the rich text editor. */
+export async function uploadContentImage(formData: FormData): Promise<{ url?: string; error?: string }> {
+  return uploadBlogImage(formData, "posts");
 }

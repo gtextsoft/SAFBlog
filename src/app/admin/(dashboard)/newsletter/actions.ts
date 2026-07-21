@@ -13,7 +13,6 @@ import {
 } from "@/lib/email/resend";
 import { signToken } from "@/lib/newsletter/token";
 import { createClient } from "@/lib/supabase/server";
-import { createServiceClient } from "@/lib/supabase/service";
 import { CONTACT_EMAIL } from "@/lib/seo/site";
 
 async function requireAdmin() {
@@ -77,14 +76,21 @@ function markdownToPlainText(markdown: string): string {
     .trim();
 }
 
+/**
+ * Send a campaign to all confirmed subscribers.
+ * Uses the signed-in admin session (RLS) — no service-role key required.
+ */
 export async function sendCampaign(
   _prev: CampaignState,
   formData: FormData,
 ): Promise<CampaignState> {
-  const { user } = await requireAdmin();
+  const { supabase, user } = await requireAdmin();
 
   if (!isEmailConfigured()) {
-    return { error: "RESEND_API_KEY / RESEND_FROM_EMAIL are not configured." };
+    return {
+      error:
+        "Resend is not configured. Set RESEND_API_KEY and RESEND_FROM_EMAIL in .env.local, then restart the dev server.",
+    };
   }
 
   const parsed = CampaignSchema.safeParse({
@@ -101,35 +107,42 @@ export async function sendCampaign(
   const htmlBody = await markdownToEmailHtml(body);
   const plain = markdownToPlainText(body);
 
-  let service;
-  try {
-    service = createServiceClient();
-  } catch (err) {
-    return {
-      error: err instanceof Error ? err.message : "Service role key missing.",
-    };
-  }
-
-  const { data: subscribers, error: listError } = await service
+  const { data: subscribers, error: listError } = await supabase
     .from("newsletter_subscribers")
     .select("email")
     .eq("status", "subscribed");
 
   if (listError) {
-    return { error: listError.message };
+    return {
+      error: `Could not load subscribers: ${listError.message}. Apply the newsletter migrations if the table is missing.`,
+    };
   }
 
-  const recipients = subscribers ?? [];
+  const recipients = (subscribers ?? []).filter((s) => Boolean(s.email));
   if (recipients.length === 0) {
-    return { error: "No confirmed subscribers to send to." };
+    return {
+      error:
+        "No confirmed subscribers to send to. People must finish the confirmation email first (status = subscribed).",
+    };
   }
 
   let sent = 0;
-  const failures: string[] = [];
+  const failureReasons: string[] = [];
 
   for (const { email } of recipients) {
     try {
-      const token = await signToken(email);
+      let token: string;
+      try {
+        token = await signToken(email);
+      } catch (err) {
+        return {
+          error:
+            err instanceof Error
+              ? err.message
+              : "NEWSLETTER_TOKEN_SECRET is missing from .env.local.",
+        };
+      }
+
       const unsub = unsubscribeUrl(token, email);
       const edgeUnsub = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/unsubscribe?token=${encodeURIComponent(token)}`;
 
@@ -145,30 +158,41 @@ export async function sendCampaign(
       });
 
       if (result.ok) sent += 1;
-      else failures.push(email);
-    } catch {
-      failures.push(email);
+      else failureReasons.push(`${email}: ${result.error}`);
+    } catch (err) {
+      failureReasons.push(
+        `${email}: ${err instanceof Error ? err.message : "unknown error"}`,
+      );
     }
   }
 
-  await service.from("newsletter_campaigns").insert({
+  const { error: logError } = await supabase.from("newsletter_campaigns").insert({
     subject,
     body: preheader ? `<!-- preheader: ${preheader} -->\n${body}` : body,
     recipient_count: sent,
     created_by: user.id,
   });
 
+  if (logError) {
+    console.error("newsletter_campaigns insert", logError.message);
+    // Still report send outcome even if the audit log insert failed
+    // (table may not exist until migrations are applied).
+  }
+
   revalidatePath("/admin/newsletter");
   revalidatePath("/admin/subscribers");
 
-  if (failures.length > 0 && sent === 0) {
-    return { error: `Send failed for all ${failures.length} recipients.` };
+  if (sent === 0) {
+    const detail = failureReasons[0] ?? "Unknown Resend error.";
+    return {
+      error: `Send failed for all ${recipients.length} recipient(s). ${detail}`,
+    };
   }
 
   return {
     success:
-      failures.length > 0
-        ? `Sent to ${sent} of ${recipients.length} (${failures.length} failed).`
+      failureReasons.length > 0
+        ? `Sent to ${sent} of ${recipients.length}. Some failed: ${failureReasons[0]}`
         : `Sent to ${sent} subscriber${sent === 1 ? "" : "s"}.`,
   };
 }

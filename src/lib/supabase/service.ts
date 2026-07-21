@@ -9,10 +9,10 @@ import type { Database } from "@/integrations/supabase/types";
  * Service-role client — bypasses RLS. Server-only; never import from client components.
  */
 export function createServiceClient() {
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim().replace(/^["']|["']$/g, "");
   if (!key) {
     throw new Error(
-      "Missing SUPABASE_SERVICE_ROLE_KEY. Required for newsletter confirm/reactivate and campaigns.",
+      "Missing SUPABASE_SERVICE_ROLE_KEY. Paste it from Supabase → Project Settings → API (service_role).",
     );
   }
 

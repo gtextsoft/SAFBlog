@@ -4,20 +4,27 @@ import { Resend } from "resend";
 
 import { absoluteUrl, CONTACT_EMAIL, SITE_NAME } from "@/lib/seo/site";
 
+/** Strip accidental quotes/whitespace from .env values. */
+function env(name: string): string {
+  const raw = process.env[name];
+  if (!raw) return "";
+  return raw.trim().replace(/^["']|["']$/g, "");
+}
+
 function getResend(): Resend | null {
-  const key = process.env.RESEND_API_KEY;
+  const key = env("RESEND_API_KEY");
   if (!key) return null;
   return new Resend(key);
 }
 
 export function resendFrom(): string {
-  const email = process.env.RESEND_FROM_EMAIL ?? CONTACT_EMAIL;
-  const name = process.env.RESEND_FROM_NAME ?? SITE_NAME;
+  const email = env("RESEND_FROM_EMAIL") || CONTACT_EMAIL;
+  const name = env("RESEND_FROM_NAME") || SITE_NAME;
   return `${name} <${email}>`;
 }
 
 export function isEmailConfigured(): boolean {
-  return Boolean(process.env.RESEND_API_KEY && (process.env.RESEND_FROM_EMAIL || CONTACT_EMAIL));
+  return Boolean(env("RESEND_API_KEY") && (env("RESEND_FROM_EMAIL") || CONTACT_EMAIL));
 }
 
 export async function sendEmail(opts: {
@@ -33,22 +40,39 @@ export async function sendEmail(opts: {
     return { ok: false, error: "Email is not configured (RESEND_API_KEY)." };
   }
 
-  const { error } = await resend.emails.send({
-    from: resendFrom(),
-    to: opts.to,
-    subject: opts.subject,
-    html: opts.html,
-    text: opts.text,
-    replyTo: opts.replyTo,
-    headers: opts.headers,
-  });
+  try {
+    const { data, error } = await resend.emails.send({
+      from: resendFrom(),
+      to: opts.to,
+      subject: opts.subject,
+      html: opts.html,
+      text: opts.text,
+      replyTo: opts.replyTo,
+      headers: opts.headers,
+    });
 
-  if (error) {
-    console.error("sendEmail", error);
-    return { ok: false, error: error.message };
+    if (error) {
+      console.error("sendEmail", error);
+      return {
+        ok: false,
+        error:
+          error.message ||
+          "Resend rejected the message. Verify your domain and RESEND_FROM_EMAIL in the Resend dashboard.",
+      };
+    }
+
+    if (!data?.id) {
+      return { ok: false, error: "Resend returned no message id." };
+    }
+
+    return { ok: true };
+  } catch (err) {
+    console.error("sendEmail exception", err);
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "Unexpected email send failure.",
+    };
   }
-
-  return { ok: true };
 }
 
 export function confirmationEmailHtml(confirmUrl: string): string {
