@@ -1,7 +1,8 @@
 import Link from "next/link";
-import DOMPurify from "isomorphic-dompurify";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+
+import { sanitizePostHtml, withReadableImages } from "@/lib/sanitize-html";
 
 /**
  * Article body.
@@ -13,32 +14,9 @@ function looksLikeHtml(value: string): boolean {
   return /^<[a-z][\s\S]*>/i.test(value.trim());
 }
 
-const PURIFY = {
-  USE_PROFILES: { html: true },
-  ADD_TAGS: ["iframe"],
-  ADD_ATTR: ["allow", "allowfullscreen", "frameborder", "scrolling", "src", "target", "rel"],
-};
-
-/** Ensure images in TipTap HTML stay visible even if Tailwind didn't see their classes. */
-function withReadableImages(html: string): string {
-  return html.replace(/<img\b([^>]*)>/gi, (_full, attrs: string) => {
-    let next = attrs;
-    if (!/\bstyle\s*=/i.test(next)) {
-      next += ` style="max-width:100%;height:auto;display:block;margin:1.5em 0"`;
-    }
-    if (!/\bloading\s*=/i.test(next)) {
-      next += ` loading="lazy"`;
-    }
-    if (!/\balt\s*=/i.test(next)) {
-      next += ` alt=""`;
-    }
-    return `<img${next}>`;
-  });
-}
-
 export function PostBody({ content }: { content: string }) {
   if (looksLikeHtml(content)) {
-    const clean = withReadableImages(DOMPurify.sanitize(content, PURIFY));
+    const clean = withReadableImages(sanitizePostHtml(content));
     return (
       <div
         className="prose-editorial [&_iframe]:aspect-video [&_iframe]:w-full [&_iframe]:rounded"
