@@ -7,12 +7,16 @@ import { NextResponse, type NextRequest } from "next/server";
  *
  * Refreshes the Supabase session on every request and gates /admin.
  *
- * The old app checked the admin role inside a React effect, so the admin UI
- * shipped to the browser before anything was verified and the only real
- * boundary was RLS. Checking here means unauthorised requests never reach the
- * route at all. RLS remains the backstop — this is defence in depth, not a
- * replacement for it.
+ * Staff (admin or editor) may enter /admin. Admin-only sections redirect
+ * editors to the denied login screen.
  */
+const ADMIN_ONLY_PREFIXES = [
+  "/admin/subscribers",
+  "/admin/newsletter",
+  "/admin/users",
+  "/admin/donations",
+];
+
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
 
@@ -54,28 +58,37 @@ export async function proxy(request: NextRequest) {
       return NextResponse.redirect(loginUrl);
     }
 
-    const { data: adminRole } = await supabase
+    const { data: roleRows } = await supabase
       .from("user_roles")
       .select("role")
       .eq("user_id", user.id)
-      .eq("role", "admin")
-      .maybeSingle();
+      .in("role", ["admin", "editor"]);
 
-    if (!adminRole) {
+    const roles = (roleRows ?? []).map((r) => r.role);
+    const isAdmin = roles.includes("admin");
+    const isEditor = roles.includes("editor");
+
+    if (!isAdmin && !isEditor) {
+      return NextResponse.redirect(new URL("/admin/login?denied=1", request.url));
+    }
+
+    const adminOnly = ADMIN_ONLY_PREFIXES.some(
+      (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+    );
+    if (adminOnly && !isAdmin) {
       return NextResponse.redirect(new URL("/admin/login?denied=1", request.url));
     }
   }
 
-  // Already signed in as an admin? Skip the login form.
+  // Already signed in as staff? Skip the login form.
   if (isLoginRoute && user) {
-    const { data: adminRole } = await supabase
+    const { data: roleRows } = await supabase
       .from("user_roles")
       .select("role")
       .eq("user_id", user.id)
-      .eq("role", "admin")
-      .maybeSingle();
+      .in("role", ["admin", "editor"]);
 
-    if (adminRole) {
+    if (roleRows && roleRows.length > 0) {
       return NextResponse.redirect(new URL("/admin", request.url));
     }
   }

@@ -7,7 +7,9 @@ import { ThemeToggle } from "@/components/theme/ThemeToggle";
 
 export const NAV_ITEMS = [
   { href: "/blog", label: "Stories" },
+  { href: "/search", label: "Search" },
   { href: "/about", label: "About" },
+  { href: "/contact", label: "Contact" },
   { href: "/newsletter", label: "Newsletter" },
 ];
 

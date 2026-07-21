@@ -15,14 +15,23 @@ export function Pagination({
   page,
   totalPages,
   basePath,
+  query,
 }: {
   page: number;
   totalPages: number;
   basePath: string;
+  /** Extra query params preserved across pages (e.g. `{ q: "education" }`). */
+  query?: Record<string, string>;
 }) {
   if (totalPages <= 1) return null;
 
-  const href = (n: number) => (n === 1 ? basePath : `${basePath}?page=${n}`);
+  const href = (n: number) => {
+    const params = new URLSearchParams(query);
+    if (n > 1) params.set("page", String(n));
+    else params.delete("page");
+    const qs = params.toString();
+    return qs ? `${basePath}?${qs}` : basePath;
+  };
 
   // Compact window around the current page; always show first and last.
   const pages = new Set<number>([1, totalPages, page - 1, page, page + 1]);

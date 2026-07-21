@@ -4,34 +4,17 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
-import { createClient } from "@/lib/supabase/server";
+import { requireRole } from "@/lib/auth/require-role";
 
 /**
  * Server Actions for promotions.
  *
- * Every action re-checks the admin role. The proxy already gates /admin, but
+ * Every action re-checks staff role. The proxy already gates /admin, but
  * a Server Action is a public POST endpoint reachable by its own id — it is
- * not protected by whatever guarded the page that rendered the form. Relying
- * on the proxy alone would leave these writable by any authenticated user.
+ * not protected by whatever guarded the page that rendered the form.
  */
 async function requireAdmin() {
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) redirect("/admin/login");
-
-  const { data: role } = await supabase
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", user.id)
-    .eq("role", "admin")
-    .maybeSingle();
-
-  if (!role) redirect("/admin/login?denied=1");
-
+  const { supabase } = await requireRole("admin", "editor");
   return supabase;
 }
 

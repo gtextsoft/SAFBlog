@@ -171,6 +171,10 @@ async function getPostsByTaxonomy(
           role: row.author.role,
           bio: row.author.bio,
           avatarUrl: row.author.avatar_url,
+          slug: null,
+          twitterUrl: null,
+          linkedinUrl: null,
+          websiteUrl: null,
         }
       : null,
     categories: (row.post_categories ?? []).map((r) => r.category).filter(Boolean) as Category[],

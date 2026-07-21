@@ -6,12 +6,23 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import { PostBody } from "@/components/blog/PostBody";
 import { PostCard } from "@/components/blog/PostCard";
+import { CommentForm } from "@/components/blog/CommentForm";
+import { CommentList } from "@/components/blog/CommentList";
+import { SocialShare } from "@/components/blog/SocialShare";
+import { ViewTracker } from "@/components/analytics/ViewTracker";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { InArticlePromotion } from "@/components/promotions/PromotionSlot";
-import { blogPostingSchema, blogSchema, breadcrumbSchema, jsonLdGraph } from "@/lib/seo/schema";
+import {
+  blogPostingSchema,
+  blogSchema,
+  breadcrumbSchema,
+  faqPageSchema,
+  jsonLdGraph,
+} from "@/lib/seo/schema";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { formatPostDate } from "@/lib/format";
+import { getApprovedComments } from "@/lib/queries/comments";
 import {
   getAdjacentPosts,
   getAllPostSlugs,
@@ -39,33 +50,34 @@ export async function generateMetadata({
 
   if (!post) return { title: "Story not found", robots: { index: false, follow: false } };
 
-  const description = post.excerpt || `${post.title} — from the ${SITE_NAME}.`;
+  const title = post.metaTitle || post.title;
+  const description =
+    post.metaDescription || post.excerpt || `${post.title} — from the ${SITE_NAME}.`;
+  const ogImage = post.ogImageUrl || post.coverImageUrl;
+  const canonical = post.canonicalUrl || `/blog/${post.slug}`;
 
   return {
-    title: post.title,
+    title,
     description,
-    alternates: { canonical: `/blog/${post.slug}` },
+    alternates: { canonical },
+    robots: post.noindex ? { index: false, follow: true } : undefined,
     openGraph: {
       type: "article",
-      title: post.title,
+      title,
       description,
-      url: absoluteUrl(`/blog/${post.slug}`),
+      url: post.canonicalUrl || absoluteUrl(`/blog/${post.slug}`),
       siteName: SITE_NAME,
       publishedTime: post.publishedAt ?? undefined,
       modifiedTime: post.updatedAt,
       authors: post.author ? [post.author.fullName] : undefined,
       tags: post.tags.map((t) => t.name),
-      // A real cover photo beats a generated card, so it wins when present.
-      // Leaving this undefined lets Next fall back to opengraph-image.tsx,
-      // which renders the headline — so a post without a cover still gets a
-      // card that says what it is instead of the generic logo.
-      images: post.coverImageUrl ? [{ url: post.coverImageUrl }] : undefined,
+      images: ogImage ? [{ url: ogImage }] : undefined,
     },
     twitter: {
       card: "summary_large_image",
-      title: post.title,
+      title,
       description,
-      images: post.coverImageUrl ? [post.coverImageUrl] : undefined,
+      images: ogImage ? [ogImage] : undefined,
     },
   };
 }
@@ -78,12 +90,13 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
   // apology on it — the old SPA did the latter, which keeps dead URLs indexed.
   if (!post) notFound();
 
-  const [related, adjacent, promotions] = await Promise.all([
+  const [related, adjacent, promotions, comments] = await Promise.all([
     getRelatedPosts(post.id, 3),
     post.publishedAt
       ? getAdjacentPosts(post.publishedAt)
       : Promise.resolve({ previous: null, next: null }),
     getPromotions("in_article", 1),
+    getApprovedComments(post.id),
   ]);
 
   const date = formatPostDate(post.publishedAt);
@@ -98,9 +111,8 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
       <JsonLd
         data={jsonLdGraph(
           blogPostingSchema(post),
-          // Included so the BlogPosting's isPartOf reference resolves within
-          // this page's graph instead of pointing at an @id defined elsewhere.
           blogSchema(),
+          faqPageSchema(post.faq, `/blog/${post.slug}`),
           breadcrumbSchema([
             { name: "Home", url: "/" },
             { name: "Stories", url: "/blog" },
@@ -110,6 +122,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
       />
 
       <SiteHeader />
+      <ViewTracker postId={post.id} />
 
       <main id="main">
         <article>
@@ -154,7 +167,16 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
 
               <div className="mt-8 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
                 <span className="text-foreground">
-                  {post.author?.fullName ?? "SAF Editorial Team"}
+                  {post.author?.slug ? (
+                    <Link
+                      href={`/author/${post.author.slug}`}
+                      className="transition-colors hover:text-primary"
+                    >
+                      {post.author.fullName}
+                    </Link>
+                  ) : (
+                    (post.author?.fullName ?? "SAF Editorial Team")
+                  )}
                 </span>
                 {date && (
                   <>
@@ -165,6 +187,13 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
                 <span aria-hidden="true">·</span>
                 <span>{post.readingMinutes} min read</span>
               </div>
+
+              <SocialShare
+                className="mt-6"
+                url={absoluteUrl(`/blog/${post.slug}`)}
+                title={post.title}
+                description={post.excerpt}
+              />
 
               {/* Freshness is a ranking and trust signal; surface it. */}
               {updated && (
@@ -191,7 +220,34 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
           )}
 
           <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
+            {post.keyTakeaways.length > 0 && (
+              <aside className="mb-10 rounded-lg border border-border bg-surface-sunken p-5">
+                <h2 className="text-eyebrow uppercase tracking-[0.14em] text-muted-foreground">
+                  Key takeaways
+                </h2>
+                <ul className="mt-3 list-disc space-y-1.5 pl-5 text-sm leading-relaxed">
+                  {post.keyTakeaways.map((t) => (
+                    <li key={t}>{t}</li>
+                  ))}
+                </ul>
+              </aside>
+            )}
+
             <PostBody content={post.content} />
+
+            {post.faq.length > 0 && (
+              <section className="mt-12 border-t border-border pt-8">
+                <h2 className="font-display text-2xl">Frequently asked questions</h2>
+                <dl className="mt-6 space-y-6">
+                  {post.faq.map((item) => (
+                    <div key={item.question}>
+                      <dt className="font-medium">{item.question}</dt>
+                      <dd className="mt-2 text-muted-foreground">{item.answer}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </section>
+            )}
 
             {/*
               Sibling of the prose container, never inside it: the article body
@@ -219,6 +275,29 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
                 </ul>
               </div>
             )}
+
+            <section
+              aria-labelledby="comments-heading"
+              className="mt-12 border-t border-border pt-8"
+            >
+              <h2 id="comments-heading" className="font-display text-2xl">
+                Comments
+                {comments.length > 0 && (
+                  <span className="ml-2 text-base font-normal text-muted-foreground" data-numeric>
+                    ({comments.length})
+                  </span>
+                )}
+              </h2>
+              <div className="mt-6">
+                <CommentList comments={comments} />
+              </div>
+              <div className="mt-8">
+                <h3 className="text-eyebrow uppercase tracking-[0.14em] text-muted-foreground">
+                  Leave a comment
+                </h3>
+                <CommentForm postId={post.id} postSlug={post.slug} className="mt-4" />
+              </div>
+            </section>
 
             {post.author?.bio && (
               <div className="mt-10 rounded-lg border border-border bg-surface-sunken p-6">

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { Plausible } from "@/components/analytics/Plausible";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { jsonLdGraph, organisationSchema, websiteSchema } from "@/lib/seo/schema";
@@ -65,6 +66,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             than repeating the organisation on every route. */}
         <JsonLd data={jsonLdGraph(organisationSchema(), websiteSchema())} />
 
+        <Plausible />
         <ThemeProvider>
           <a
             href="#main"

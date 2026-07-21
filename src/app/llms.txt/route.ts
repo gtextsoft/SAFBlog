@@ -2,7 +2,9 @@ import { getPublishedPosts } from "@/lib/queries/posts";
 import { getCategoriesWithCounts } from "@/lib/queries/taxonomy";
 import { absoluteUrl, SITE_DESCRIPTION, SITE_NAME } from "@/lib/seo/site";
 
-export const revalidate = 3600;
+// Generated per request: a discovery surface listing a withdrawn post is
+// worse than the cost of one query. See the note in app/sitemap.ts.
+export const dynamic = "force-dynamic";
 
 /**
  * /llms.txt — a Markdown map of the site for AI crawlers and assistants.

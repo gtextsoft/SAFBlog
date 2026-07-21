@@ -46,8 +46,11 @@ export function SiteFooter() {
             <ul className="mt-3 space-y-1">
               {[
                 { href: "/blog", label: "All stories" },
+                { href: "/search", label: "Search" },
                 { href: "/about", label: "About the Foundation" },
+                { href: "/contact", label: "Contact" },
                 { href: "/newsletter", label: "Newsletter" },
+                { href: "/donate", label: "Donate" },
               ].map(({ href, label }) => (
                 <li key={href}>
                   <Link
@@ -92,12 +95,20 @@ export function SiteFooter() {
           <p>
             © {year} {SITE_NAME}. All rights reserved.
           </p>
-          <Link
-            href="/feed.xml"
-            className="inline-flex min-h-11 items-center transition-colors duration-150 hover:text-foreground"
-          >
-            RSS
-          </Link>
+          <div className="flex flex-wrap items-center gap-4">
+            <Link
+              href="/donate"
+              className="inline-flex min-h-11 items-center font-medium text-primary transition-colors duration-150 hover:text-primary-hover"
+            >
+              Support our work
+            </Link>
+            <Link
+              href="/feed.xml"
+              className="inline-flex min-h-11 items-center transition-colors duration-150 hover:text-foreground"
+            >
+              RSS
+            </Link>
+          </div>
         </div>
       </div>
     </footer>

@@ -46,6 +46,12 @@ export function PostRow({ post }: { post: AdminPostListItem }) {
           <p className="mt-0.5 truncate text-sm text-muted-foreground">
             /blog/{post.slug}
             {post.authorName && ` · ${post.authorName}`}
+            {published && (
+              <>
+                {" · "}
+                <span data-numeric>{post.viewCount.toLocaleString("en-NG")}</span> views
+              </>
+            )}
           </p>
         </div>
 

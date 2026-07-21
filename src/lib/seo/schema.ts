@@ -50,9 +50,14 @@ export function websiteSchema() {
     description: SITE_DESCRIPTION,
     inLanguage: SITE_LANGUAGE,
     publisher: { "@id": ORGANISATION_ID },
-    // NOTE: no SearchAction. Declaring one requires a working search endpoint;
-    // claiming a /search?q= that 404s is a false signal. Add it with the
-    // search page.
+    potentialAction: {
+      "@type": "SearchAction",
+      target: {
+        "@type": "EntryPoint",
+        urlTemplate: absoluteUrl("/search?q={search_term_string}"),
+      },
+      "query-input": "required name=search_term_string",
+    },
   };
 }
 
@@ -118,8 +123,20 @@ export function blogPostingSchema(post: Post) {
       ? {
           "@type": "Person",
           name: post.author.fullName,
+          ...(post.author.slug && {
+            url: absoluteUrl(`/author/${post.author.slug}`),
+            "@id": `${SITE_URL}/author/${post.author.slug}#person`,
+          }),
           ...(post.author.role && { jobTitle: post.author.role }),
           ...(post.author.bio && { description: post.author.bio }),
+          ...((() => {
+            const sameAs = [
+              post.author.twitterUrl,
+              post.author.linkedinUrl,
+              post.author.websiteUrl,
+            ].filter(Boolean);
+            return sameAs.length > 0 ? { sameAs } : {};
+          })()),
         }
       : { "@id": ORGANISATION_ID },
     publisher: { "@id": ORGANISATION_ID },
@@ -135,6 +152,22 @@ export function blogPostingSchema(post: Post) {
       "@type": "SpeakableSpecification",
       cssSelector: ["h1", ".prose-editorial > p:first-of-type"],
     },
+  };
+}
+
+export function faqPageSchema(faq: { question: string; answer: string }[], pageUrl: string) {
+  if (faq.length === 0) return null;
+  return {
+    "@type": "FAQPage",
+    "@id": `${absoluteUrl(pageUrl)}#faq`,
+    mainEntity: faq.map((item) => ({
+      "@type": "Question",
+      name: item.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: item.answer,
+      },
+    })),
   };
 }
 
@@ -190,9 +223,9 @@ export function collectionSchema({
  * it is how the crawler learns the article, the blog and the organisation are
  * the same entities rather than three unrelated mentions.
  */
-export function jsonLdGraph(...nodes: object[]) {
+export function jsonLdGraph(...nodes: (object | null | undefined)[]) {
   return {
     "@context": "https://schema.org",
-    "@graph": nodes,
+    "@graph": nodes.filter(Boolean),
   };
 }

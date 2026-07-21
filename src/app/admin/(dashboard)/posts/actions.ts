@@ -4,31 +4,13 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
+import { uploadImage } from "@/app/admin/(dashboard)/media/actions";
+import { requireRole } from "@/lib/auth/require-role";
+import { randomToken, slugify } from "@/lib/slugify";
 import { createClient } from "@/lib/supabase/server";
 
-/**
- * Server Actions for posts.
- *
- * As with promotions, each action re-verifies the admin role: a Server Action
- * is a public POST endpoint addressable by its own id, so it is not protected
- * by whatever gated the page that rendered the form.
- */
 async function requireAdmin() {
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/admin/login");
-
-  const { data: role } = await supabase
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", user.id)
-    .eq("role", "admin")
-    .maybeSingle();
-  if (!role) redirect("/admin/login?denied=1");
-
+  const { supabase } = await requireRole("admin", "editor");
   return supabase;
 }
 
@@ -36,6 +18,11 @@ export interface PostActionState {
   error?: string;
   fieldErrors?: Record<string, string>;
 }
+
+const FaqItemSchema = z.object({
+  question: z.string().trim().min(1),
+  answer: z.string().trim().min(1),
+});
 
 const PostSchema = z.object({
   title: z.string().trim().min(1, "Title is required").max(200),
@@ -49,12 +36,39 @@ const PostSchema = z.object({
   content: z.string().min(1, "Content is required"),
   coverImageUrl: z.string().trim().url().optional().or(z.literal("")),
   authorId: z.string().uuid().optional().or(z.literal("")),
-  status: z.enum(["draft", "published"]),
+  status: z.enum(["draft", "published", "scheduled"]),
+  scheduledAt: z.string().optional().or(z.literal("")),
   categoryIds: z.array(z.string().uuid()),
   tagIds: z.array(z.string().uuid()),
+  metaTitle: z.string().trim().max(70).optional().or(z.literal("")),
+  metaDescription: z.string().trim().max(160).optional().or(z.literal("")),
+  focusKeyword: z.string().trim().max(80).optional().or(z.literal("")),
+  ogImageUrl: z.string().trim().url().optional().or(z.literal("")),
+  canonicalUrl: z.string().trim().url().optional().or(z.literal("")),
+  noindex: z.boolean(),
+  keyTakeaways: z.array(z.string().trim().min(1)).max(12),
+  faq: z.array(FaqItemSchema).max(20),
 });
 
+function parseFaq(formData: FormData) {
+  const questions = formData.getAll("faqQuestion").map(String);
+  const answers = formData.getAll("faqAnswer").map(String);
+  const faq: { question: string; answer: string }[] = [];
+  for (let i = 0; i < Math.max(questions.length, answers.length); i++) {
+    const question = (questions[i] ?? "").trim();
+    const answer = (answers[i] ?? "").trim();
+    if (question && answer) faq.push({ question, answer });
+  }
+  return faq;
+}
+
 function parse(formData: FormData) {
+  const takeawaysRaw = String(formData.get("keyTakeaways") ?? "");
+  const keyTakeaways = takeawaysRaw
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
+
   return PostSchema.safeParse({
     title: formData.get("title"),
     slug: formData.get("slug"),
@@ -63,8 +77,17 @@ function parse(formData: FormData) {
     coverImageUrl: formData.get("coverImageUrl"),
     authorId: formData.get("authorId"),
     status: formData.get("status"),
+    scheduledAt: formData.get("scheduledAt"),
     categoryIds: formData.getAll("categoryIds").map(String).filter(Boolean),
     tagIds: formData.getAll("tagIds").map(String).filter(Boolean),
+    metaTitle: formData.get("metaTitle"),
+    metaDescription: formData.get("metaDescription"),
+    focusKeyword: formData.get("focusKeyword"),
+    ogImageUrl: formData.get("ogImageUrl"),
+    canonicalUrl: formData.get("canonicalUrl"),
+    noindex: formData.get("noindex") === "on" || formData.get("noindex") === "true",
+    keyTakeaways,
+    faq: parseFaq(formData),
   });
 }
 
@@ -79,14 +102,23 @@ function fieldErrors(error: z.ZodError): Record<string, string> {
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
 
-/**
- * Replace a post's categories and tags.
- *
- * The old editor deleted every row then inserted the new set with no
- * safeguard, so a failed insert left the post with no taxonomy at all. Here
- * the inserts run first and the delete only removes rows that are no longer
- * wanted — if an insert fails, the previous associations are still intact.
- */
+function seoFields(v: z.infer<typeof PostSchema>) {
+  return {
+    meta_title: v.metaTitle || null,
+    meta_description: v.metaDescription || null,
+    focus_keyword: v.focusKeyword || null,
+    og_image_url: v.ogImageUrl || null,
+    canonical_url: v.canonicalUrl || null,
+    noindex: v.noindex,
+    key_takeaways: v.keyTakeaways,
+    faq: v.faq,
+    scheduled_at:
+      v.status === "scheduled" && v.scheduledAt
+        ? new Date(v.scheduledAt).toISOString()
+        : null,
+  };
+}
+
 async function syncTaxonomy(
   supabase: Supabase,
   postId: string,
@@ -113,16 +145,22 @@ async function syncTaxonomy(
     if (error) return error.message;
   }
 
-  // Now drop what is no longer selected. Deleting after the inserts succeed
-  // means an error above never leaves the post bare.
   const deleteCategories =
     categoryIds.length > 0
-      ? supabase.from("post_categories").delete().eq("post_id", postId).not("category_id", "in", `(${categoryIds.join(",")})`)
+      ? supabase
+          .from("post_categories")
+          .delete()
+          .eq("post_id", postId)
+          .not("category_id", "in", `(${categoryIds.join(",")})`)
       : supabase.from("post_categories").delete().eq("post_id", postId);
 
   const deleteTags =
     tagIds.length > 0
-      ? supabase.from("post_tags").delete().eq("post_id", postId).not("tag_id", "in", `(${tagIds.join(",")})`)
+      ? supabase
+          .from("post_tags")
+          .delete()
+          .eq("post_id", postId)
+          .not("tag_id", "in", `(${tagIds.join(",")})`)
       : supabase.from("post_tags").delete().eq("post_id", postId);
 
   const [catRes, tagRes] = await Promise.all([deleteCategories, deleteTags]);
@@ -132,28 +170,17 @@ async function syncTaxonomy(
   return null;
 }
 
-/**
- * Purge every cached surface a post appears on.
- *
- * Includes the taxonomy archives: publishing into a category changes that
- * category's page and its post count in every sidebar, neither of which Next
- * can infer. The `"page"` variant matches the route pattern, so all generated
- * category and tag pages are invalidated rather than one guessed slug.
- */
 function revalidatePost(slug: string) {
   revalidatePath("/");
   revalidatePath("/blog");
   revalidatePath(`/blog/${slug}`);
   revalidatePath("/category/[slug]", "page");
   revalidatePath("/tag/[slug]", "page");
-
-  // Discovery surfaces — a post missing from these is invisible to crawlers
-  // and AI answer engines until the hour is up.
+  revalidatePath("/author/[slug]", "page");
   revalidatePath("/sitemap.xml");
   revalidatePath("/feed.xml");
   revalidatePath("/llms.txt");
   revalidatePath("/llms-full.txt");
-
   revalidatePath("/admin/posts");
 }
 
@@ -167,12 +194,16 @@ export async function createPost(
   if (!parsed.success) return { fieldErrors: fieldErrors(parsed.error) };
   const v = parsed.data;
 
-  // Check the slug up front so the editor can point at the field, instead of
-  // surfacing a raw unique-constraint error after the fact.
+  if (v.status === "scheduled" && !v.scheduledAt) {
+    return { fieldErrors: { scheduledAt: "Pick a publish time for scheduled posts." } };
+  }
+
   const { data: clash } = await supabase.from("posts").select("id").eq("slug", v.slug).maybeSingle();
   if (clash) {
     return { fieldErrors: { slug: "A post with this URL already exists. Choose another." } };
   }
+
+  const preview_token = randomToken(16);
 
   const { data, error } = await supabase
     .from("posts")
@@ -184,8 +215,9 @@ export async function createPost(
       cover_image_url: v.coverImageUrl || null,
       author_id: v.authorId || null,
       status: v.status,
-      // Stamp the publication date the first time it goes live.
       published_at: v.status === "published" ? new Date().toISOString() : null,
+      preview_token,
+      ...seoFields(v),
     })
     .select("id, slug")
     .single();
@@ -218,6 +250,10 @@ export async function updatePost(
   if (!parsed.success) return { fieldErrors: fieldErrors(parsed.error) };
   const v = parsed.data;
 
+  if (v.status === "scheduled" && !v.scheduledAt) {
+    return { fieldErrors: { scheduledAt: "Pick a publish time for scheduled posts." } };
+  }
+
   const { data: clash } = await supabase
     .from("posts")
     .select("id")
@@ -230,7 +266,7 @@ export async function updatePost(
 
   const { data: existing } = await supabase
     .from("posts")
-    .select("published_at, slug")
+    .select("published_at, slug, preview_token")
     .eq("id", id)
     .maybeSingle();
 
@@ -244,12 +280,12 @@ export async function updatePost(
       cover_image_url: v.coverImageUrl || null,
       author_id: v.authorId || null,
       status: v.status,
-      // Preserve the original publication date across edits; only set it if
-      // this is the transition from draft to published.
       published_at:
         v.status === "published"
           ? (existing?.published_at ?? new Date().toISOString())
           : existing?.published_at ?? null,
+      preview_token: existing?.preview_token || randomToken(16),
+      ...seoFields(v),
     })
     .eq("id", id);
 
@@ -266,7 +302,6 @@ export async function updatePost(
     };
   }
 
-  // Revalidate the old slug too, or the previous URL keeps serving stale HTML.
   if (existing?.slug && existing.slug !== v.slug) revalidatePost(existing.slug);
   revalidatePost(v.slug);
   redirect(`/admin/posts?saved=1`);
@@ -286,7 +321,6 @@ export async function deletePost(id: string): Promise<void> {
   if (post?.slug) revalidatePost(post.slug);
 }
 
-/** Publish/unpublish from the list without opening the editor. */
 export async function setPostStatus(id: string, status: "draft" | "published"): Promise<void> {
   const supabase = await requireAdmin();
 
@@ -315,47 +349,31 @@ export async function setPostStatus(id: string, status: "draft" | "published"): 
   if (existing?.slug) revalidatePost(existing.slug);
 }
 
-/** Create an author inline, so the editor is not blocked by a missing record. */
-export async function createAuthor(fullName: string): Promise<{ error?: string }> {
+export async function createAuthor(fullName: string): Promise<{ error?: string; id?: string }> {
   const supabase = await requireAdmin();
 
   const name = fullName.trim();
   if (!name) return { error: "Enter a name." };
 
-  const { error } = await supabase.from("authors").insert({ full_name: name });
+  let slug = slugify(name);
+  const { data: clash } = await supabase.from("authors").select("id").eq("slug", slug).maybeSingle();
+  if (clash) slug = `${slug}-${randomToken(3)}`;
+
+  const { data, error } = await supabase
+    .from("authors")
+    .insert({ full_name: name, slug })
+    .select("id")
+    .single();
   if (error) {
     console.error("createAuthor", { message: error.message });
     return { error: "Could not add that author." };
   }
 
   revalidatePath("/admin/posts");
-  return {};
+  revalidatePath("/admin/authors");
+  return { id: data.id };
 }
 
-/** Upload a cover image. Runs server-side so the bucket needs no anon write. */
 export async function uploadCoverImage(formData: FormData): Promise<{ url?: string; error?: string }> {
-  const supabase = await requireAdmin();
-
-  const file = formData.get("file");
-  if (!(file instanceof File) || file.size === 0) return { error: "Choose an image first." };
-  if (!file.type.startsWith("image/")) return { error: "That file is not an image." };
-  if (file.size > 5 * 1024 * 1024) return { error: "Images must be under 5 MB." };
-
-  const extension = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
-  const path = `posts/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${extension}`;
-
-  const { error } = await supabase.storage
-    .from("post-images")
-    .upload(path, file, { cacheControl: "3600", upsert: false, contentType: file.type });
-
-  if (error) {
-    console.error("uploadCoverImage", { message: error.message });
-    return { error: "Upload failed. Please try again." };
-  }
-
-  const {
-    data: { publicUrl },
-  } = supabase.storage.from("post-images").getPublicUrl(path);
-
-  return { url: publicUrl };
+  return uploadImage(formData, "posts");
 }

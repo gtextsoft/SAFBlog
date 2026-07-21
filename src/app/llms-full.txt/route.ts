@@ -1,7 +1,10 @@
 import { getAllPostSlugs, getPostBySlug } from "@/lib/queries/posts";
 import { absoluteUrl, SITE_DESCRIPTION, SITE_NAME } from "@/lib/seo/site";
 
-export const revalidate = 3600;
+// Unlike the other discovery surfaces this fetches every post body, so it
+// keeps a cache — shortened from an hour so a withdrawn post drops out
+// quickly without making the full-corpus build run on every request.
+export const revalidate = 300;
 
 /**
  * /llms-full.txt — the complete text of every published article in one fetch.

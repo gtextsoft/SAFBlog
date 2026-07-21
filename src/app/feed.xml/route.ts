@@ -1,7 +1,9 @@
 import { getPublishedPosts } from "@/lib/queries/posts";
 import { absoluteUrl, CONTACT_EMAIL, SITE_DESCRIPTION, SITE_LANGUAGE, SITE_NAME, SITE_URL } from "@/lib/seo/site";
 
-export const revalidate = 3600;
+// Generated per request: a discovery surface listing a withdrawn post is
+// worse than the cost of one query. See the note in app/sitemap.ts.
+export const dynamic = "force-dynamic";
 
 /** Escape the five XML entities. Unescaped `&` in a title breaks the feed. */
 function xml(value: string): string {

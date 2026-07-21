@@ -1,11 +1,21 @@
 import type { MetadataRoute } from "next";
 
 import { getAllPostSlugs } from "@/lib/queries/posts";
+import { getAllAuthors } from "@/lib/queries/authors";
 import { getCategoriesWithCounts, getTagsWithCounts } from "@/lib/queries/taxonomy";
 import { absoluteUrl } from "@/lib/seo/site";
 
-// Regenerated hourly alongside the content it lists.
-export const revalidate = 3600;
+/**
+ * Always generated fresh.
+ *
+ * This was cached for an hour, and an unpublished post left the sitemap
+ * advertising a URL that returned 404 — which Search Console reports as
+ * "Submitted URL not found". Revalidation from the admin covers edits made
+ * there, but not ones made directly in Supabase or via any other tool, so
+ * the cache cannot be trusted to be correct. A sitemap is a handful of rows
+ * and crawlers request it rarely; correctness is worth more than the cache.
+ */
+export const dynamic = "force-dynamic";
 
 /**
  * sitemap.xml
@@ -19,10 +29,11 @@ export const revalidate = 3600;
  * budget and a thin-content signal.
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [posts, categories, tags] = await Promise.all([
+  const [posts, categories, tags, authors] = await Promise.all([
     getAllPostSlugs(),
     getCategoriesWithCounts(),
     getTagsWithCounts(),
+    getAllAuthors(),
   ]);
 
   const now = new Date();
@@ -30,6 +41,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: absoluteUrl("/"), lastModified: now, changeFrequency: "daily", priority: 1 },
     { url: absoluteUrl("/blog"), lastModified: now, changeFrequency: "daily", priority: 0.9 },
+    { url: absoluteUrl("/search"), lastModified: now, changeFrequency: "weekly", priority: 0.5 },
     { url: absoluteUrl("/about"), lastModified: now, changeFrequency: "monthly", priority: 0.7 },
     {
       url: absoluteUrl("/newsletter"),
@@ -37,12 +49,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "monthly",
       priority: 0.6,
     },
+    { url: absoluteUrl("/contact"), lastModified: now, changeFrequency: "monthly", priority: 0.5 },
+    { url: absoluteUrl("/donate"), lastModified: now, changeFrequency: "monthly", priority: 0.6 },
   ];
 
   const postRoutes: MetadataRoute.Sitemap = posts.map(({ slug, updatedAt }) => ({
     url: absoluteUrl(`/blog/${slug}`),
-    // Real lastModified from the row, so a re-crawl is triggered by an actual
-    // edit rather than by every build.
     lastModified: new Date(updatedAt),
     changeFrequency: "weekly",
     priority: 0.8,
@@ -66,5 +78,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.4,
     }));
 
-  return [...staticRoutes, ...postRoutes, ...categoryRoutes, ...tagRoutes];
+  const authorRoutes: MetadataRoute.Sitemap = authors
+    .filter((a) => a.slug)
+    .map((a) => ({
+      url: absoluteUrl(`/author/${a.slug}`),
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.5,
+    }));
+
+  return [...staticRoutes, ...postRoutes, ...categoryRoutes, ...tagRoutes, ...authorRoutes];
 }

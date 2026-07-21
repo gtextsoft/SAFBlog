@@ -22,6 +22,10 @@ export type Database = {
           full_name: string
           id: string
           role: string | null
+          slug: string
+          twitter_url: string | null
+          linkedin_url: string | null
+          website_url: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -30,6 +34,10 @@ export type Database = {
           full_name: string
           id?: string
           role?: string | null
+          slug: string
+          twitter_url?: string | null
+          linkedin_url?: string | null
+          website_url?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -38,6 +46,10 @@ export type Database = {
           full_name?: string
           id?: string
           role?: string | null
+          slug?: string
+          twitter_url?: string | null
+          linkedin_url?: string | null
+          website_url?: string | null
         }
         Relationships: []
       }
@@ -62,9 +74,75 @@ export type Database = {
         }
         Relationships: []
       }
+      comments: {
+        Row: {
+          id: string
+          post_id: string
+          author_name: string
+          author_email: string
+          body: string
+          status: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          post_id: string
+          author_name: string
+          author_email: string
+          body: string
+          status?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          post_id?: string
+          author_name?: string
+          author_email?: string
+          body?: string
+          status?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      donations: {
+        Row: {
+          id: string
+          stripe_session_id: string
+          amount: number
+          currency: string
+          email: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          stripe_session_id: string
+          amount: number
+          currency?: string
+          email?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          stripe_session_id?: string
+          amount?: number
+          currency?: string
+          email?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
       newsletter_subscribers: {
         Row: {
           unsubscribed_at: string | null
+          confirmed_at: string | null
           created_at: string
           email: string
           full_name: string | null
@@ -74,6 +152,7 @@ export type Database = {
         }
         Insert: {
           unsubscribed_at?: string | null
+          confirmed_at?: string | null
           created_at?: string
           email: string
           full_name?: string | null
@@ -83,12 +162,43 @@ export type Database = {
         }
         Update: {
           unsubscribed_at?: string | null
+          confirmed_at?: string | null
           created_at?: string
           email?: string
           full_name?: string | null
           id?: string
           source?: string | null
           status?: string
+        }
+        Relationships: []
+      }
+      newsletter_campaigns: {
+        Row: {
+          id: string
+          subject: string
+          body: string
+          sent_at: string
+          recipient_count: number
+          created_by: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          subject: string
+          body: string
+          sent_at?: string
+          recipient_count?: number
+          created_by?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          subject?: string
+          body?: string
+          sent_at?: string
+          recipient_count?: number
+          created_by?: string | null
+          created_at?: string
         }
         Relationships: []
       }
@@ -165,6 +275,18 @@ export type Database = {
           status: string
           title: string
           updated_at: string
+          meta_title: string | null
+          meta_description: string | null
+          focus_keyword: string | null
+          og_image_url: string | null
+          canonical_url: string | null
+          faq: Json
+          key_takeaways: string[] | null
+          reading_minutes: number | null
+          view_count: number
+          noindex: boolean
+          scheduled_at: string | null
+          preview_token: string | null
         }
         Insert: {
           author_id?: string | null
@@ -178,6 +300,18 @@ export type Database = {
           status?: string
           title: string
           updated_at?: string
+          meta_title?: string | null
+          meta_description?: string | null
+          focus_keyword?: string | null
+          og_image_url?: string | null
+          canonical_url?: string | null
+          faq?: Json
+          key_takeaways?: string[] | null
+          reading_minutes?: number | null
+          view_count?: number
+          noindex?: boolean
+          scheduled_at?: string | null
+          preview_token?: string | null
         }
         Update: {
           author_id?: string | null
@@ -191,6 +325,18 @@ export type Database = {
           status?: string
           title?: string
           updated_at?: string
+          meta_title?: string | null
+          meta_description?: string | null
+          focus_keyword?: string | null
+          og_image_url?: string | null
+          canonical_url?: string | null
+          faq?: Json
+          key_takeaways?: string[] | null
+          reading_minutes?: number | null
+          view_count?: number
+          noindex?: boolean
+          scheduled_at?: string | null
+          preview_token?: string | null
         }
         Relationships: [
           {

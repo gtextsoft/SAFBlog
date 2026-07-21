@@ -26,6 +26,15 @@ export interface Author {
   role: string | null;
   bio: string | null;
   avatarUrl: string | null;
+  slug: string | null;
+  twitterUrl: string | null;
+  linkedinUrl: string | null;
+  websiteUrl: string | null;
+}
+
+export interface FaqItem {
+  question: string;
+  answer: string;
 }
 
 export interface PostSummary {
@@ -45,6 +54,15 @@ export interface PostSummary {
 
 export interface Post extends PostSummary {
   content: string;
+  metaTitle: string | null;
+  metaDescription: string | null;
+  focusKeyword: string | null;
+  ogImageUrl: string | null;
+  canonicalUrl: string | null;
+  faq: FaqItem[];
+  keyTakeaways: string[];
+  noindex: boolean;
+  viewCount: number;
 }
 
 /** A page of results plus the total, for URL-addressable pagination. */

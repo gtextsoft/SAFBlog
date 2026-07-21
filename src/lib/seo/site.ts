@@ -28,11 +28,19 @@ export function absoluteUrl(path = "/"): string {
 }
 
 /**
- * Social profiles, emitted as schema.org `sameAs` to tie the site to the
- * organisation's external entities. Replace the placeholders that the old
- * footer shipped (bare facebook.com, twitter.com, …) with the real handles
- * before launch — a wrong sameAs is worse than none.
+ * Social profiles, emitted as schema.org `sameAs`, tying this site to the
+ * Foundation's established entity in the Knowledge Graph.
+ *
+ * Only include profiles belonging to the ORGANISATION. Stephen Akintayo's
+ * personal profiles (Forbes Councils, LinkedIn, etc.) describe a Person, not
+ * the NGO — listing them here asserts the two are the same entity, which is a
+ * false claim. Those belong on a Person node, e.g. an author page.
+ *
+ * A wrong sameAs is worse than none: it can bind the site to the wrong entity.
+ * Every URL here must be verified as officially the Foundation's.
  */
-export const SOCIAL_PROFILES: string[] = [];
+export const SOCIAL_PROFILES: string[] = [
+  "https://www.facebook.com/stephenakintayofoundation/",
+];
 
 export const CONTACT_EMAIL = "info@stephenakintayofoundation.org";

@@ -249,7 +249,42 @@ export function PostEditor({
           >
             <option value="draft">Draft — not visible</option>
             <option value="published">Published</option>
+            <option value="scheduled">Scheduled</option>
           </select>
+
+          <label htmlFor="scheduledAt" className="mb-1.5 mt-3 block text-sm">
+            Schedule (if scheduled)
+          </label>
+          <input
+            id="scheduledAt"
+            name="scheduledAt"
+            type="datetime-local"
+            defaultValue={
+              post?.scheduledAt
+                ? new Date(post.scheduledAt).toISOString().slice(0, 16)
+                : ""
+            }
+            className={inputClass}
+          />
+          {errors.scheduledAt && (
+            <p role="alert" className="mt-1 text-xs text-destructive">
+              {errors.scheduledAt}
+            </p>
+          )}
+
+          {post?.previewToken && (
+            <p className="mt-3 text-xs text-muted-foreground">
+              Preview:{" "}
+              <a
+                href={`/preview/${post.previewToken}`}
+                target="_blank"
+                rel="noopener"
+                className="text-primary underline-offset-2 hover:underline"
+              >
+                /preview/{post.previewToken.slice(0, 8)}…
+              </a>
+            </p>
+          )}
 
           <div className="mt-4 flex items-center gap-3">
             <SubmitButton label={submitLabel} />
@@ -260,6 +295,100 @@ export function PostEditor({
               Cancel
             </Link>
           </div>
+        </div>
+
+        <div className="rounded-lg border border-border bg-card p-4">
+          <h2 className="text-sm font-medium">SEO &amp; GEO</h2>
+          <label htmlFor="metaTitle" className="mb-1.5 mt-3 block text-xs">
+            Meta title
+          </label>
+          <input
+            id="metaTitle"
+            name="metaTitle"
+            maxLength={70}
+            defaultValue={post?.metaTitle ?? ""}
+            className={inputClass}
+          />
+          <label htmlFor="metaDescription" className="mb-1.5 mt-3 block text-xs">
+            Meta description
+          </label>
+          <textarea
+            id="metaDescription"
+            name="metaDescription"
+            rows={2}
+            maxLength={160}
+            defaultValue={post?.metaDescription ?? ""}
+            className="w-full rounded border border-input bg-background p-2 text-sm"
+          />
+          <label htmlFor="focusKeyword" className="mb-1.5 mt-3 block text-xs">
+            Focus keyword
+          </label>
+          <input
+            id="focusKeyword"
+            name="focusKeyword"
+            defaultValue={post?.focusKeyword ?? ""}
+            className={inputClass}
+          />
+          <label htmlFor="ogImageUrl" className="mb-1.5 mt-3 block text-xs">
+            OG image URL
+          </label>
+          <input
+            id="ogImageUrl"
+            name="ogImageUrl"
+            type="url"
+            defaultValue={post?.ogImageUrl ?? ""}
+            className={inputClass}
+          />
+          <label htmlFor="canonicalUrl" className="mb-1.5 mt-3 block text-xs">
+            Canonical URL
+          </label>
+          <input
+            id="canonicalUrl"
+            name="canonicalUrl"
+            type="url"
+            defaultValue={post?.canonicalUrl ?? ""}
+            className={inputClass}
+          />
+          <label className="mt-3 flex min-h-11 items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              name="noindex"
+              defaultChecked={post?.noindex}
+              className="h-4 w-4"
+            />
+            Noindex this post
+          </label>
+          <label htmlFor="keyTakeaways" className="mb-1.5 mt-3 block text-xs">
+            Key takeaways (one per line)
+          </label>
+          <textarea
+            id="keyTakeaways"
+            name="keyTakeaways"
+            rows={4}
+            defaultValue={(post?.keyTakeaways ?? []).join("\n")}
+            className="w-full rounded border border-input bg-background p-2 font-mono text-sm"
+          />
+          <p className="mb-1.5 mt-3 text-xs font-medium">FAQ pairs</p>
+          {(post?.faq?.length ? post.faq : [{ question: "", answer: "" }]).map((item, i) => (
+            <div key={i} className="mt-2 space-y-1">
+              <input
+                name="faqQuestion"
+                placeholder="Question"
+                defaultValue={item.question}
+                className={inputClass}
+              />
+              <textarea
+                name="faqAnswer"
+                placeholder="Answer"
+                rows={2}
+                defaultValue={item.answer}
+                className="w-full rounded border border-input bg-background p-2 text-sm"
+              />
+            </div>
+          ))}
+          <p className="mt-1 text-xs text-muted-foreground">
+            Leave a blank pair to skip. Add more by editing after save.
+          </p>
         </div>
 
         <div className="rounded-lg border border-border bg-card p-4">
@@ -344,6 +473,13 @@ export function PostEditor({
               </option>
             ))}
           </select>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Manage authors in{" "}
+            <Link href="/admin/authors" className="text-primary underline-offset-2 hover:underline">
+              Authors
+            </Link>
+            .
+          </p>
         </div>
 
         <fieldset className="rounded-lg border border-border bg-card p-4">

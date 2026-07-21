@@ -6,7 +6,7 @@ export interface AdminSubscriber {
   id: string;
   email: string;
   fullName: string | null;
-  status: "subscribed" | "unsubscribed";
+  status: "pending" | "subscribed" | "unsubscribed";
   source: string | null;
   createdAt: string;
   unsubscribedAt: string | null;
@@ -63,10 +63,11 @@ export async function listSubscribers(
 export async function getSubscriberStats(): Promise<{
   subscribed: number;
   unsubscribed: number;
+  pending: number;
 }> {
   const supabase = await createClient();
 
-  const [subscribedRes, unsubscribedRes] = await Promise.all([
+  const [subscribedRes, unsubscribedRes, pendingRes] = await Promise.all([
     supabase
       .from("newsletter_subscribers")
       .select("id", { count: "exact", head: true })
@@ -75,10 +76,15 @@ export async function getSubscriberStats(): Promise<{
       .from("newsletter_subscribers")
       .select("id", { count: "exact", head: true })
       .eq("status", "unsubscribed"),
+    supabase
+      .from("newsletter_subscribers")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "pending"),
   ]);
 
   return {
     subscribed: subscribedRes.count ?? 0,
     unsubscribed: unsubscribedRes.count ?? 0,
+    pending: pendingRes.count ?? 0,
   };
 }

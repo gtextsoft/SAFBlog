@@ -3,6 +3,7 @@ import "server-only";
 import { cache } from "react";
 
 import { calculateReadingTime } from "@/lib/reading-time";
+import { escapeSearchTerm } from "@/lib/search";
 import { createPublicClient } from "@/lib/supabase/public";
 import type { Paginated, Post, PostSummary } from "@/types/blog";
 
@@ -14,10 +15,14 @@ export const POSTS_PER_PAGE = 9;
  */
 const POST_SELECT = `
   id, title, slug, excerpt, content, cover_image_url, published_at, updated_at,
-  author:authors(id, full_name, role, bio, avatar_url),
+  meta_title, meta_description, focus_keyword, og_image_url, canonical_url,
+  faq, key_takeaways, reading_minutes, view_count, noindex,
+  author:authors(id, full_name, role, bio, avatar_url, slug, twitter_url, linkedin_url, website_url),
   post_categories(category:categories(id, name, slug, description)),
   post_tags(tag:tags(id, name, slug))
 ` as const;
+
+type FaqRow = { question?: string; answer?: string };
 
 type PostRow = {
   id: string;
@@ -28,16 +33,37 @@ type PostRow = {
   cover_image_url: string | null;
   published_at: string | null;
   updated_at: string;
+  meta_title: string | null;
+  meta_description: string | null;
+  focus_keyword: string | null;
+  og_image_url: string | null;
+  canonical_url: string | null;
+  faq: FaqRow[] | null;
+  key_takeaways: string[] | null;
+  reading_minutes: number | null;
+  view_count: number | null;
+  noindex: boolean | null;
   author: {
     id: string;
     full_name: string;
     role: string | null;
     bio: string | null;
     avatar_url: string | null;
+    slug: string | null;
+    twitter_url: string | null;
+    linkedin_url: string | null;
+    website_url: string | null;
   } | null;
   post_categories: { category: NonNullable<Post["categories"][number]> | null }[] | null;
   post_tags: { tag: NonNullable<Post["tags"][number]> | null }[] | null;
 };
+
+function mapFaq(faq: FaqRow[] | null): Post["faq"] {
+  if (!Array.isArray(faq)) return [];
+  return faq
+    .filter((item) => item?.question && item?.answer)
+    .map((item) => ({ question: String(item.question), answer: String(item.answer) }));
+}
 
 function mapPost(row: PostRow): Post {
   return {
@@ -49,7 +75,16 @@ function mapPost(row: PostRow): Post {
     coverImageUrl: row.cover_image_url,
     publishedAt: row.published_at,
     updatedAt: row.updated_at,
-    readingMinutes: calculateReadingTime(row.content),
+    readingMinutes: row.reading_minutes ?? calculateReadingTime(row.content),
+    metaTitle: row.meta_title,
+    metaDescription: row.meta_description,
+    focusKeyword: row.focus_keyword,
+    ogImageUrl: row.og_image_url,
+    canonicalUrl: row.canonical_url,
+    faq: mapFaq(row.faq),
+    keyTakeaways: row.key_takeaways ?? [],
+    noindex: Boolean(row.noindex),
+    viewCount: row.view_count ?? 0,
     author: row.author
       ? {
           id: row.author.id,
@@ -57,17 +92,32 @@ function mapPost(row: PostRow): Post {
           role: row.author.role,
           bio: row.author.bio,
           avatarUrl: row.author.avatar_url,
+          slug: row.author.slug,
+          twitterUrl: row.author.twitter_url,
+          linkedinUrl: row.author.linkedin_url,
+          websiteUrl: row.author.website_url,
         }
       : null,
-    // `.filter(Boolean)` guards against a relation row whose target was deleted.
     categories: (row.post_categories ?? []).map((r) => r.category).filter(Boolean) as Post["categories"],
     tags: (row.post_tags ?? []).map((r) => r.tag).filter(Boolean) as Post["tags"],
   };
 }
 
-/** Strip the body — list views never need it, and it dominates payload size. */
+/** Strip the body and SEO-only fields — list views never need them. */
 function toSummary(post: Post): PostSummary {
-  const { content: _content, ...summary } = post;
+  const {
+    content: _content,
+    metaTitle: _metaTitle,
+    metaDescription: _metaDescription,
+    focusKeyword: _focusKeyword,
+    ogImageUrl: _ogImageUrl,
+    canonicalUrl: _canonicalUrl,
+    faq: _faq,
+    keyTakeaways: _keyTakeaways,
+    noindex: _noindex,
+    viewCount: _viewCount,
+    ...summary
+  } = post;
   return summary;
 }
 
@@ -107,6 +157,44 @@ export const getPublishedPosts = cache(
 
     if (error) {
       console.error("getPublishedPosts", { page, message: error.message });
+      return { items: [], total: 0, page, perPage, totalPages: 0 };
+    }
+
+    const total = count ?? 0;
+    return {
+      items: (data as unknown as PostRow[]).map((row) => toSummary(mapPost(row))),
+      total,
+      page,
+      perPage,
+      totalPages: Math.max(1, Math.ceil(total / perPage)),
+    };
+  },
+);
+
+/**
+ * Full-text-ish search over published titles and excerpts.
+ * Escapes PostgREST / LIKE metacharacters before building the `.or()` filter.
+ */
+export const searchPosts = cache(
+  async (q: string, page = 1, perPage = POSTS_PER_PAGE): Promise<Paginated<PostSummary>> => {
+    const term = escapeSearchTerm(q);
+    if (!term) {
+      return { items: [], total: 0, page, perPage, totalPages: 0 };
+    }
+
+    const supabase = createPublicClient();
+    const from = (page - 1) * perPage;
+
+    const { data, error, count } = await supabase
+      .from("posts")
+      .select(POST_SELECT, { count: "exact" })
+      .eq("status", "published")
+      .or(`title.ilike.%${term}%,excerpt.ilike.%${term}%`)
+      .order("published_at", { ascending: false })
+      .range(from, from + perPage - 1);
+
+    if (error) {
+      console.error("searchPosts", { q: term, page, message: error.message });
       return { items: [], total: 0, page, perPage, totalPages: 0 };
     }
 
@@ -240,3 +328,30 @@ export const getAdjacentPosts = cache(
     };
   },
 );
+
+/** Draft/scheduled preview by opaque token. Uses service role (bypasses RLS). */
+export async function getPostByPreviewToken(token: string): Promise<Post | null> {
+  if (!token) return null;
+
+  const { createServiceClient } = await import("@/lib/supabase/service");
+  let supabase;
+  try {
+    supabase = createServiceClient();
+  } catch (err) {
+    console.error("getPostByPreviewToken: no service key", err);
+    return null;
+  }
+
+  const { data, error } = await supabase
+    .from("posts")
+    .select(POST_SELECT)
+    .eq("preview_token", token)
+    .maybeSingle();
+
+  if (error) {
+    console.error("getPostByPreviewToken", { message: error.message });
+    return null;
+  }
+
+  return data ? mapPost(data as unknown as PostRow) : null;
+}
