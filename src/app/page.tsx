@@ -8,7 +8,7 @@ import { SiteHeader } from "@/components/site/SiteHeader";
 import { getPublishedPosts } from "@/lib/queries/posts";
 import { SITE_TAGLINE } from "@/lib/seo/site";
 
-export const revalidate = 3600;
+export const revalidate = 60;
 
 export default async function HomePage() {
   const { items: posts } = await getPublishedPosts(1, 7);

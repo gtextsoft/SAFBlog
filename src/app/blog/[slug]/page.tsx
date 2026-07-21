@@ -32,7 +32,19 @@ import {
 import { getPromotions } from "@/lib/queries/promotions";
 import { absoluteUrl, SITE_NAME } from "@/lib/seo/site";
 
-export const revalidate = 3600;
+export const revalidate = 60;
+
+/** True when the URL looks like a direct image file (not an Unsplash page, etc.). */
+function isDirectImageUrl(url: string | null | undefined): url is string {
+  if (!url) return false;
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol !== "https:" && parsed.protocol !== "http:") return false;
+    return /\.(avif|gif|jpe?g|png|webp|svg)(\?|#|$)/i.test(parsed.pathname);
+  } catch {
+    return false;
+  }
+}
 
 /** Prerender every published post at build time; new ones fall back to ISR. */
 export async function generateStaticParams() {
@@ -53,7 +65,9 @@ export async function generateMetadata({
   const title = post.metaTitle || post.title;
   const description =
     post.metaDescription || post.excerpt || `${post.title} — from the ${SITE_NAME}.`;
-  const ogImage = post.ogImageUrl || post.coverImageUrl;
+  const ogImage = isDirectImageUrl(post.ogImageUrl)
+    ? post.ogImageUrl
+    : post.coverImageUrl;
   const canonical = post.canonicalUrl || `/blog/${post.slug}`;
 
   return {
@@ -205,18 +219,19 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
           </header>
 
           {post.coverImageUrl && (
-            <div className="mx-auto max-w-4xl px-4 sm:px-6">
-              <div className="relative mt-10 aspect-[16/9] overflow-hidden rounded">
-                <Image
-                  src={post.coverImageUrl}
-                  alt=""
-                  fill
-                  sizes="(max-width: 896px) 100vw, 896px"
-                  priority
-                  className="object-cover"
-                />
-              </div>
-            </div>
+            <figure className="mx-auto max-w-3xl px-4 sm:px-6">
+              {/* Native img: avoids fill/aspect collapse and optimizer failures on storage URLs */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={post.coverImageUrl}
+                alt=""
+                width={1200}
+                height={675}
+                className="mt-10 w-full rounded object-cover"
+                style={{ aspectRatio: "16 / 9" }}
+                fetchPriority="high"
+              />
+            </figure>
           )}
 
           <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6">

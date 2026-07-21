@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import DOMPurify from "isomorphic-dompurify";
 import ReactMarkdown from "react-markdown";
@@ -20,12 +19,29 @@ const PURIFY = {
   ADD_ATTR: ["allow", "allowfullscreen", "frameborder", "scrolling", "src", "target", "rel"],
 };
 
+/** Ensure images in TipTap HTML stay visible even if Tailwind didn't see their classes. */
+function withReadableImages(html: string): string {
+  return html.replace(/<img\b([^>]*)>/gi, (_full, attrs: string) => {
+    let next = attrs;
+    if (!/\bstyle\s*=/i.test(next)) {
+      next += ` style="max-width:100%;height:auto;display:block;margin:1.5em 0"`;
+    }
+    if (!/\bloading\s*=/i.test(next)) {
+      next += ` loading="lazy"`;
+    }
+    if (!/\balt\s*=/i.test(next)) {
+      next += ` alt=""`;
+    }
+    return `<img${next}>`;
+  });
+}
+
 export function PostBody({ content }: { content: string }) {
   if (looksLikeHtml(content)) {
-    const clean = DOMPurify.sanitize(content, PURIFY);
+    const clean = withReadableImages(DOMPurify.sanitize(content, PURIFY));
     return (
       <div
-        className="prose-editorial [&_iframe]:aspect-video [&_iframe]:w-full [&_iframe]:rounded [&_img]:rounded"
+        className="prose-editorial [&_iframe]:aspect-video [&_iframe]:w-full [&_iframe]:rounded"
         dangerouslySetInnerHTML={{ __html: clean }}
       />
     );
@@ -58,15 +74,14 @@ export function PostBody({ content }: { content: string }) {
             if (typeof src !== "string") return null;
 
             return (
-              <span className="relative my-6 block aspect-[16/9] overflow-hidden rounded">
-                <Image
-                  src={src}
-                  alt={alt ?? ""}
-                  fill
-                  sizes="(max-width: 768px) 100vw, 720px"
-                  className="object-cover"
-                />
-              </span>
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={src}
+                alt={alt ?? ""}
+                loading="lazy"
+                className="my-6 w-full rounded"
+                style={{ maxWidth: "100%", height: "auto", display: "block" }}
+              />
             );
           },
 

@@ -13,7 +13,7 @@ import { getPublishedPosts, POSTS_PER_PAGE } from "@/lib/queries/posts";
 import { getPromotions } from "@/lib/queries/promotions";
 import { SITE_NAME } from "@/lib/seo/site";
 
-export const revalidate = 3600;
+export const revalidate = 60;
 
 /** Insert the in-feed promotion after this many cards. */
 const PROMO_AFTER = 4;

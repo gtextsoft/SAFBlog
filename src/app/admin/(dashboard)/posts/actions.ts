@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
@@ -8,6 +8,7 @@ import { uploadBlogImage } from "@/lib/storage/upload";
 import { requireRole } from "@/lib/auth/require-role";
 import { randomToken, slugify } from "@/lib/slugify";
 import { createClient } from "@/lib/supabase/server";
+import { POST_CACHE_TAG, postCacheTag } from "@/lib/queries/posts";
 
 async function requireAdmin() {
   const { supabase } = await requireRole("admin", "editor");
@@ -171,9 +172,13 @@ async function syncTaxonomy(
 }
 
 function revalidatePost(slug: string) {
+  // updateTag = immediate expire (Server Action read-your-writes). Required in Next 16.
+  updateTag(postCacheTag(slug));
+  updateTag(POST_CACHE_TAG);
   revalidatePath("/");
   revalidatePath("/blog");
-  revalidatePath(`/blog/${slug}`);
+  revalidatePath(`/blog/${slug}`, "layout");
+  revalidatePath(`/blog/${slug}`, "page");
   revalidatePath("/category/[slug]", "page");
   revalidatePath("/tag/[slug]", "page");
   revalidatePath("/author/[slug]", "page");
@@ -285,6 +290,7 @@ export async function updatePost(
           ? (existing?.published_at ?? new Date().toISOString())
           : existing?.published_at ?? null,
       preview_token: existing?.preview_token || randomToken(16),
+      updated_at: new Date().toISOString(),
       ...seoFields(v),
     })
     .eq("id", id);

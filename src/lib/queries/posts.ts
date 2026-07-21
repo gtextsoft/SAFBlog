@@ -1,6 +1,7 @@
 import "server-only";
 
 import { cache } from "react";
+import { unstable_cache } from "next/cache";
 
 import { calculateReadingTime } from "@/lib/reading-time";
 import { escapeSearchTerm } from "@/lib/search";
@@ -8,6 +9,14 @@ import { createPublicClient } from "@/lib/supabase/public";
 import type { Paginated, Post, PostSummary } from "@/types/blog";
 
 export const POSTS_PER_PAGE = 9;
+
+/** Shared tag for list/index caches. */
+export const POST_CACHE_TAG = "posts";
+
+/** Per-post tag — purge on create/update/delete. */
+export function postCacheTag(slug: string): string {
+  return `post:${slug}`;
+}
 
 /**
  * One join covering everything a card or article needs. The old app issued a
@@ -122,52 +131,64 @@ function toSummary(post: Post): PostSummary {
 }
 
 /**
- * `cache()` dedupes within a single request, so generateMetadata and the page
- * component can each ask for the same post without a second query.
+ * `cache()` dedupes within a single request; `unstable_cache` + tags let
+ * admin saves bust the Full Route / Data Cache immediately via revalidateTag.
  */
 export const getPostBySlug = cache(async (slug: string): Promise<Post | null> => {
-  const supabase = createPublicClient();
+  return unstable_cache(
+    async () => {
+      const supabase = createPublicClient();
 
-  const { data, error } = await supabase
-    .from("posts")
-    .select(POST_SELECT)
-    .eq("slug", slug)
-    .eq("status", "published")
-    .maybeSingle();
+      const { data, error } = await supabase
+        .from("posts")
+        .select(POST_SELECT)
+        .eq("slug", slug)
+        .eq("status", "published")
+        .maybeSingle();
 
-  if (error) {
-    console.error("getPostBySlug", { slug, message: error.message });
-    return null;
-  }
+      if (error) {
+        console.error("getPostBySlug", { slug, message: error.message });
+        return null;
+      }
 
-  return data ? mapPost(data as unknown as PostRow) : null;
+      return data ? mapPost(data as unknown as PostRow) : null;
+    },
+    ["post-by-slug", slug],
+    { tags: [POST_CACHE_TAG, postCacheTag(slug)], revalidate: 60 },
+  )();
 });
 
 export const getPublishedPosts = cache(
   async (page = 1, perPage = POSTS_PER_PAGE): Promise<Paginated<PostSummary>> => {
-    const supabase = createPublicClient();
-    const from = (page - 1) * perPage;
+    return unstable_cache(
+      async () => {
+        const supabase = createPublicClient();
+        const from = (page - 1) * perPage;
 
-    const { data, error, count } = await supabase
-      .from("posts")
-      .select(POST_SELECT, { count: "exact" })
-      .eq("status", "published")
-      .order("published_at", { ascending: false })
-      .range(from, from + perPage - 1);
+        const { data, error, count } = await supabase
+          .from("posts")
+          .select(POST_SELECT, { count: "exact" })
+          .eq("status", "published")
+          .order("published_at", { ascending: false })
+          .range(from, from + perPage - 1);
 
-    if (error) {
-      console.error("getPublishedPosts", { page, message: error.message });
-      return { items: [], total: 0, page, perPage, totalPages: 0 };
-    }
+        if (error) {
+          console.error("getPublishedPosts", { page, message: error.message });
+          return { items: [], total: 0, page, perPage, totalPages: 0 };
+        }
 
-    const total = count ?? 0;
-    return {
-      items: (data as unknown as PostRow[]).map((row) => toSummary(mapPost(row))),
-      total,
-      page,
-      perPage,
-      totalPages: Math.max(1, Math.ceil(total / perPage)),
-    };
+        const total = count ?? 0;
+        return {
+          items: (data as unknown as PostRow[]).map((row) => toSummary(mapPost(row))),
+          total,
+          page,
+          perPage,
+          totalPages: Math.max(1, Math.ceil(total / perPage)),
+        };
+      },
+      ["published-posts", String(page), String(perPage)],
+      { tags: [POST_CACHE_TAG], revalidate: 60 },
+    )();
   },
 );
 

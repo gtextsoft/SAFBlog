@@ -90,10 +90,10 @@ export function RichTextEditor({
   onDirty?: () => void;
   className?: string;
 }) {
-  const [html, setHtml] = useState(initialContent);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
+  const hiddenRef = useRef<HTMLInputElement>(null);
   const loadedRef = useRef(false);
 
   const editor = useEditor({
@@ -129,7 +129,8 @@ export function RichTextEditor({
       },
     },
     onUpdate: ({ editor: ed }) => {
-      setHtml(ed.getHTML());
+      // Write the DOM input immediately so form submit never races React state.
+      if (hiddenRef.current) hiddenRef.current.value = ed.getHTML();
       onDirty?.();
     },
   });
@@ -141,13 +142,29 @@ export function RichTextEditor({
       const content = await toEditorHtml(initialContent);
       if (cancelled) return;
       editor.commands.setContent(content, { emitUpdate: false });
-      setHtml(editor.getHTML());
+      if (hiddenRef.current) hiddenRef.current.value = editor.getHTML();
       loadedRef.current = true;
     })();
     return () => {
       cancelled = true;
     };
   }, [editor, initialContent]);
+
+  // Last-chance sync right before FormData is built (capture phase).
+  useEffect(() => {
+    const input = hiddenRef.current;
+    const form = input?.form;
+    if (!form || !editor) return;
+
+    function syncBeforeSubmit() {
+      if (hiddenRef.current && editor) {
+        hiddenRef.current.value = editor.getHTML();
+      }
+    }
+
+    form.addEventListener("submit", syncBeforeSubmit, true);
+    return () => form.removeEventListener("submit", syncBeforeSubmit, true);
+  }, [editor]);
 
   const setLink = useCallback(() => {
     if (!editor) return;
@@ -179,6 +196,7 @@ export function RichTextEditor({
       if (result.error) setUploadError(result.error);
       else if (result.url) {
         editor.chain().focus().setImage({ src: result.url }).run();
+        if (hiddenRef.current) hiddenRef.current.value = editor.getHTML();
         onDirty?.();
       }
     } catch (err) {
@@ -202,7 +220,12 @@ export function RichTextEditor({
 
   return (
     <div className={cn("space-y-2", className)}>
-      <input type="hidden" name={name} value={html} />
+      <input
+        ref={hiddenRef}
+        type="hidden"
+        name={name}
+        defaultValue={initialContent || "<p></p>"}
+      />
 
       <div className="overflow-hidden rounded-lg border border-border bg-card">
         <div className="flex flex-wrap gap-0.5 border-b border-border bg-muted/30 p-1.5">
