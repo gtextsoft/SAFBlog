@@ -37,7 +37,7 @@ See `.env.example` for the full list. Key groups:
 - **Site**: `NEXT_PUBLIC_SITE_URL`
 - **Email**: `RESEND_API_KEY`, `RESEND_FROM_*`, `NEWSLETTER_TOKEN_SECRET`
 - **Ops**: `REVALIDATE_SECRET`, `CRON_SECRET`
-- **Optional**: `NEXT_PUBLIC_PLAUSIBLE_DOMAIN`, `STRIPE_*`, `SENTRY_DSN`
+- **Optional**: `NEXT_PUBLIC_PLAUSIBLE_DOMAIN`, `NEXT_PUBLIC_STRIPE_PAYMENT_LINK`, `SENTRY_DSN`
 
 ## Architecture (brief)
 
@@ -60,4 +60,4 @@ supabase/migrations/      Schema + RLS
 
 ## Deploy
 
-Deploy on Vercel (or any Node host). Point `NEXT_PUBLIC_SITE_URL` at the production origin. Configure Stripe webhook → `/api/stripe/webhook` and Supabase revalidate → `/api/revalidate`.
+Deploy on Vercel (or any Node host). Point `NEXT_PUBLIC_SITE_URL` at the production origin. Set `NEXT_PUBLIC_STRIPE_PAYMENT_LINK` to your Stripe Payment Link for the donate button. Configure Supabase revalidate → `/api/revalidate` if used.

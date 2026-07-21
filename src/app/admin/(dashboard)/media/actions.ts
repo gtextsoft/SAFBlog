@@ -5,8 +5,6 @@ import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth/require-role";
 import { uploadBlogImage, type MediaFolder } from "@/lib/storage/upload";
 
-export type { MediaFolder };
-
 export async function uploadImage(
   formData: FormData,
   folder: MediaFolder = "library",

@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ExternalLink } from "lucide-react";
 
-import { createCheckoutSession } from "@/app/donate/actions";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { SiteHeader } from "@/components/site/SiteHeader";
+import { getDonationPaymentLink } from "@/lib/donate";
 import { breadcrumbSchema, jsonLdGraph, organisationSchema } from "@/lib/seo/schema";
 import { absoluteUrl, SITE_LANGUAGE, SITE_NAME } from "@/lib/seo/site";
 
@@ -14,18 +15,8 @@ export const metadata: Metadata = {
   alternates: { canonical: "/donate" },
 };
 
-const PRESETS = [
-  { amount: 1000, label: "$10" },
-  { amount: 2500, label: "$25" },
-  { amount: 5000, label: "$50" },
-] as const;
-
-export default async function DonatePage({
-  searchParams,
-}: {
-  searchParams: Promise<{ error?: string }>;
-}) {
-  const { error } = await searchParams;
+export default function DonatePage() {
+  const paymentLink = getDonationPaymentLink();
 
   return (
     <>
@@ -57,54 +48,35 @@ export default async function DonatePage({
             </h1>
             <p className="mt-4 max-w-xl text-lg text-muted-foreground">
               Your gift funds education, youth empowerment, and community development programmes.
-              Choose an amount to continue securely with Stripe.
+              Choose any amount on the secure Stripe checkout page.
             </p>
           </div>
         </div>
 
         <div className="mx-auto max-w-lg px-4 py-14 sm:px-6">
-          {error && (
-            <p role="alert" className="mb-6 rounded border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
-              {error === "config"
-                ? "Donations are temporarily unavailable. Please try again later."
-                : "Something went wrong starting checkout. Please try again."}
+          {paymentLink ? (
+            <a
+              href={paymentLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded bg-primary px-5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
+            >
+              Donate with Stripe
+              <ExternalLink className="h-4 w-4" aria-hidden="true" />
+            </a>
+          ) : (
+            <p
+              role="alert"
+              className="rounded border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-950 dark:text-amber-100"
+            >
+              Donation link is not configured yet. Set{" "}
+              <code className="text-xs">NEXT_PUBLIC_STRIPE_PAYMENT_LINK</code> in{" "}
+              <code className="text-xs">.env.local</code> to your Stripe Payment Link URL.
             </p>
           )}
 
-          <form action={createCheckoutSession} className="space-y-4">
-            <fieldset>
-              <legend className="mb-3 text-sm font-medium">Select an amount (USD)</legend>
-              <div className="grid grid-cols-3 gap-3">
-                {PRESETS.map(({ amount, label }, index) => (
-                  <label
-                    key={amount}
-                    className="relative flex cursor-pointer flex-col items-center justify-center rounded border border-border bg-card px-3 py-6 transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary-subtle"
-                  >
-                    <input
-                      type="radio"
-                      name="amount"
-                      value={amount}
-                      defaultChecked={index === 1}
-                      className="sr-only"
-                    />
-                    <span className="font-display text-2xl" data-numeric>
-                      {label}
-                    </span>
-                  </label>
-                ))}
-              </div>
-            </fieldset>
-
-            <button
-              type="submit"
-              className="inline-flex min-h-11 w-full items-center justify-center rounded bg-primary px-5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
-            >
-              Continue to checkout
-            </button>
-          </form>
-
           <p className="mt-6 text-center text-xs text-muted-foreground">
-            Payments are processed by Stripe. You will receive a receipt by email.
+            You’ll enter the amount you want to give on Stripe. Receipts are emailed by Stripe.
           </p>
 
           <p className="mt-8 text-center text-sm text-muted-foreground">
