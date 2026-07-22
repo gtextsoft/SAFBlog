@@ -122,10 +122,6 @@ export function CommentForm({
         </p>
       )}
 
-      <p className="text-xs text-muted-foreground">
-        Your comment appears immediately. Your email is not published.
-      </p>
-
       <SubmitButton />
     </form>
   );

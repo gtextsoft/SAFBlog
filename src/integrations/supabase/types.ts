@@ -460,6 +460,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_post_view: {
+        Args: { p_post_id: string }
+        Returns: undefined
+      }
       newsletter_confirm: {
         Args: { p_email: string; p_secret: string }
         Returns: boolean
