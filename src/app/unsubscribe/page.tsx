@@ -9,7 +9,7 @@ import { CONTACT_EMAIL } from "@/lib/seo/site";
 
 export const metadata: Metadata = {
   title: "Unsubscribe",
-  description: "Unsubscribe from the Stephen Akintayo Foundation newsletter.",
+  description: "Unsubscribe from The Blueprint newsletter.",
   // Nothing to gain from indexing this, and an indexed unsubscribe page
   // invites accidental visits from search.
   robots: { index: false, follow: false },

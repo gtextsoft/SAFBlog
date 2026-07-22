@@ -75,7 +75,7 @@ export function CampaignForm({
               maxLength={200}
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
-              placeholder="This month from the Foundation"
+              placeholder="This month from The Blueprint"
               className="mt-1.5 h-11 w-full rounded border border-border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
             />
             <p className="mt-1 text-xs text-muted-foreground tabular-nums" data-numeric>

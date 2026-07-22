@@ -15,7 +15,7 @@ export default function AdminLoginPage() {
         <div className="rounded-lg border border-border bg-card p-8">
           <h1 className="font-display text-2xl">Admin sign in</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Restricted to Foundation staff.
+            Restricted to editorial staff.
           </p>
 
           <Suspense fallback={<div className="mt-6 h-64" />}>

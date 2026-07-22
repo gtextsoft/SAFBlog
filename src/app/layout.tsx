@@ -6,7 +6,7 @@ import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { jsonLdGraph, organisationSchema, websiteSchema } from "@/lib/seo/schema";
 import { SITE_DESCRIPTION, SITE_LANGUAGE, SITE_NAME, SITE_TAGLINE, SITE_URL } from "@/lib/seo/site";
 
-import { inter, newsreader } from "./fonts";
+import { inter, playfair } from "./fonts";
 
 import "@/index.css";
 
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "/",
     types: {
-      "application/rss+xml": [{ url: "/feed.xml", title: `${SITE_NAME} — Blog` }],
+      "application/rss+xml": [{ url: "/feed.xml", title: `${SITE_NAME} — Articles` }],
     },
   },
   robots: {
@@ -56,7 +56,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang={SITE_LANGUAGE}
-      className={`${inter.variable} ${newsreader.variable}`}
+      className={`${inter.variable} ${playfair.variable}`}
       // next-themes writes the theme class onto <html> before paint, which
       // React would otherwise flag as a hydration mismatch.
       suppressHydrationWarning

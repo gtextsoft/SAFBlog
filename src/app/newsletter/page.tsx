@@ -10,16 +10,15 @@ import { absoluteUrl, SITE_LANGUAGE, SITE_NAME } from "@/lib/seo/site";
 
 export const metadata: Metadata = {
   title: "Newsletter",
-  description:
-    "Get field reporting and programme updates from the Stephen Akintayo Foundation by email. No spam, unsubscribe any time.",
+  description: `Get stories and insights from ${SITE_NAME} by email — business, leadership, innovation, and impact. No spam, unsubscribe any time.`,
   alternates: { canonical: "/newsletter" },
 };
 
 const REASONS = [
   {
     Icon: BookOpen,
-    title: "Stories from the field",
-    body: "Reporting on what the programmes actually change, written up as it happens.",
+    title: "Editorial briefings",
+    body: "The stories and ideas shaping business, leadership, and innovation — delivered as they publish.",
   },
   {
     Icon: Mail,
@@ -57,13 +56,13 @@ export default function NewsletterPage() {
       <main id="main">
         <div className="border-b border-border">
           <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 md:py-20">
-            <p className="text-eyebrow uppercase tracking-[0.14em] text-primary">Newsletter</p>
+            <p className="text-eyebrow uppercase tracking-[0.16em] text-accent">Newsletter</p>
             <h1 className="mt-4 max-w-2xl text-4xl leading-[1.1] md:text-5xl">
-              The Foundation&rsquo;s work, in your inbox
+              {SITE_NAME}, in your inbox
             </h1>
             <p className="mt-5 max-w-xl text-lg text-muted-foreground">
-              Field reporting, programme updates and long-form pieces on education, sustainable
-              development and community empowerment.
+              Stories, insights, and ideas shaping the future of business, leadership, innovation,
+              and impact.
             </p>
           </div>
         </div>
@@ -77,7 +76,7 @@ export default function NewsletterPage() {
               <ul className="mt-8 space-y-8">
                 {REASONS.map(({ Icon, title, body }) => (
                   <li key={title} className="flex gap-4">
-                    <Icon className="mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
+                    <Icon className="mt-0.5 h-5 w-5 shrink-0 text-accent" aria-hidden="true" />
                     <div>
                       <h3 className="text-lg">{title}</h3>
                       <p className="mt-1 text-muted-foreground">{body}</p>

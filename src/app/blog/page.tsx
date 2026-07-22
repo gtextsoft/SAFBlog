@@ -27,8 +27,8 @@ export async function generateMetadata({
   const pageNumber = Math.max(1, Number(page) || 1);
 
   return {
-    title: pageNumber > 1 ? `Stories — page ${pageNumber}` : "Stories",
-    description: `Reporting on education, sustainable development and community empowerment from the ${SITE_NAME}.`,
+    title: pageNumber > 1 ? `Articles — page ${pageNumber}` : "Articles",
+    description: `Stories, insights, and ideas from ${SITE_NAME} on business, leadership, innovation, and impact.`,
     alternates: { canonical: pageNumber > 1 ? `/blog?page=${pageNumber}` : "/blog" },
   };
 }
@@ -54,14 +54,14 @@ export default async function BlogPage({
         data={jsonLdGraph(
           blogSchema(),
           collectionSchema({
-            name: "Stories",
-            description: `Reporting from the ${SITE_NAME}.`,
+            name: "Articles",
+            description: `Articles from ${SITE_NAME}.`,
             url: "/blog",
             posts,
           }),
           breadcrumbSchema([
             { name: "Home", url: "/" },
-            { name: "Stories", url: "/blog" },
+            { name: "Articles", url: "/blog" },
           ]),
         )}
       />
@@ -70,35 +70,35 @@ export default async function BlogPage({
 
       <main id="main">
         <div className="border-b border-border">
-          <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
-            <h1 className="text-4xl md:text-5xl">Stories</h1>
-            <p className="mt-3 max-w-2xl text-lg text-muted-foreground">
-              Field reporting, programme updates and long-form pieces on what changes when
-              communities are given the tools to build.
+          <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 md:py-16">
+            <h1 className="font-display text-4xl md:text-5xl">Articles</h1>
+            <p className="mt-4 max-w-2xl text-lg text-muted-foreground">
+              Stories, insights, and ideas shaping the future of business, leadership, innovation,
+              and impact.
             </p>
             {total > 0 && (
               <p className="mt-3 text-sm text-muted-foreground">
-                <span data-numeric>{total}</span> {total === 1 ? "story" : "stories"} published
+                <span data-numeric>{total}</span> {total === 1 ? "article" : "articles"} published
               </p>
             )}
           </div>
         </div>
 
-        <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
+        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
           <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-16">
             <div>
               {posts.length === 0 ? (
-                <div className="rounded-lg border border-dashed border-border py-20 text-center">
+                <div className="border border-dashed border-border py-20 text-center">
                   <h2 className="font-display text-xl">Nothing here yet</h2>
                   <p className="mt-2 text-sm text-muted-foreground">
                     {pageNumber > 1
                       ? "That page is beyond the end of the archive."
-                      : "The first story is on its way."}
+                      : "The first article is on its way."}
                   </p>
                 </div>
               ) : (
                 <>
-                  <div className="grid gap-x-8 gap-y-12 sm:grid-cols-2">
+                  <div className="grid gap-x-10 gap-y-14 sm:grid-cols-2">
                     {posts.map((post, index) => (
                       // Fragment carries the key; the promotion is a sibling
                       // cell so the feed's grid rhythm is preserved rather

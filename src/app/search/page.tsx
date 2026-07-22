@@ -97,7 +97,7 @@ export default async function SearchPage({
           <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
             <h1 className="text-4xl md:text-5xl">Search</h1>
             <p className="mt-3 max-w-2xl text-lg text-muted-foreground">
-              Find stories by title or excerpt across the Foundation archive.
+              Find articles by title or excerpt across the {SITE_NAME} archive.
             </p>
 
             <form action="/search" method="get" className="relative mt-8 max-w-xl" role="search">

@@ -127,7 +127,7 @@ export function InFeedPromotion({ promotion, className }: PromotionProps) {
  * Rendered as a sibling of the article body, never inside it: the prose
  * container feeds `articleBody` in the BlogPosting schema and the llms.txt
  * corpus, and promotional copy must not end up quoted by an AI answer engine
- * as if it were Foundation reporting.
+ * as if it were editorial reporting.
  */
 export function InArticlePromotion({ promotion, className }: PromotionProps) {
   return (

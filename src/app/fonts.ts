@@ -1,4 +1,4 @@
-import { Inter, Newsreader } from "next/font/google";
+import { Inter, Playfair_Display } from "next/font/google";
 
 /**
  * Self-hosted by next/font at build time. This removes the render-blocking
@@ -9,8 +9,8 @@ import { Inter, Newsreader } from "next/font/google";
  * swap doesn't shift layout — the CLS problem the old setup had.
  */
 
-/** Display face. Drawn for long-form reading; carries editorial authority. */
-export const newsreader = Newsreader({
+/** Display face. Headings and brand lockups; editorial authority. */
+export const playfair = Playfair_Display({
   subsets: ["latin"],
   display: "swap",
   variable: "--font-display",

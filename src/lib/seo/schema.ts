@@ -26,7 +26,7 @@ const BLOG_ID = `${SITE_URL}/blog#blog`;
 
 export function organisationSchema() {
   return {
-    "@type": "NGO",
+    "@type": "NewsMediaOrganization",
     "@id": ORGANISATION_ID,
     name: SITE_NAME,
     url: SITE_URL,
@@ -66,7 +66,7 @@ export function blogSchema() {
     "@type": "Blog",
     "@id": BLOG_ID,
     url: absoluteUrl("/blog"),
-    name: `${SITE_NAME} — Stories`,
+    name: `${SITE_NAME} — Articles`,
     description: SITE_DESCRIPTION,
     inLanguage: SITE_LANGUAGE,
     publisher: { "@id": ORGANISATION_ID },

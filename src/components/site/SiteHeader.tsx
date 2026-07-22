@@ -1,16 +1,22 @@
 import Link from "next/link";
-import Image from "next/image";
 
 import { MobileNav } from "@/components/site/MobileNav";
 import { NavLinks } from "@/components/site/NavLinks";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import { SITE_NAME, SITE_TAGLINE } from "@/lib/seo/site";
 
 export const NAV_ITEMS = [
-  { href: "/blog", label: "Stories" },
-  { href: "/search", label: "Search" },
+  { href: "/", label: "Home" },
+  { href: "/category/business", label: "Business" },
+  { href: "/category/entrepreneurship", label: "Entrepreneurship" },
+  { href: "/category/real-estate", label: "Real Estate" },
+  { href: "/category/technology", label: "Technology" },
+  { href: "/category/leadership", label: "Leadership" },
+  { href: "/category/lifestyle", label: "Lifestyle" },
+  { href: "/category/interviews", label: "Interviews" },
+  { href: "/category/brand-spotlight", label: "Brand Spotlight" },
   { href: "/about", label: "About" },
   { href: "/contact", label: "Contact" },
-  { href: "/newsletter", label: "Newsletter" },
 ];
 
 /**
@@ -22,31 +28,29 @@ export const NAV_ITEMS = [
  */
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur-sm">
-      <div className="mx-auto flex h-16 max-w-6xl items-center gap-4 px-4 sm:px-6">
-        <Link href="/" className="flex shrink-0 items-center gap-2.5">
-          <Image
-            src="/logos/saflogo.png"
-            alt=""
-            width={36}
-            height={36}
-            className="h-9 w-auto"
-            priority
-          />
-          <span className="hidden font-display text-lg font-semibold leading-none sm:block">
-            Stephen Akintayo
-            <span className="block text-eyebrow font-normal uppercase tracking-[0.14em] text-muted-foreground">
-              Foundation
+    <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur-sm">
+      <div className="relative mx-auto flex max-w-7xl flex-col px-4 sm:px-6">
+        <div className="flex h-[4.25rem] items-center gap-4 md:h-[4.75rem]">
+          <Link href="/" className="group flex min-w-0 shrink-0 flex-col justify-center">
+            <span className="font-display text-xl font-semibold leading-none tracking-tight md:text-2xl">
+              {SITE_NAME}
             </span>
-          </span>
-          <span className="sr-only">Stephen Akintayo Foundation — home</span>
-        </Link>
+            <span className="mt-1 hidden text-[0.65rem] font-normal uppercase tracking-[0.12em] text-muted-foreground transition-colors duration-150 group-hover:text-accent sm:block">
+              {SITE_TAGLINE}
+            </span>
+            <span className="sr-only">
+              {SITE_NAME} — {SITE_TAGLINE}
+            </span>
+          </Link>
 
-        <NavLinks items={NAV_ITEMS} className="ml-auto hidden md:flex" />
+          <div className="ml-auto flex items-center gap-2">
+            <ThemeToggle />
+            <MobileNav items={NAV_ITEMS} />
+          </div>
+        </div>
 
-        <div className="ml-auto flex items-center gap-2 md:ml-0">
-          <ThemeToggle />
-          <MobileNav items={NAV_ITEMS} />
+        <div className="hidden border-t border-border py-1 lg:block">
+          <NavLinks items={NAV_ITEMS} className="flex flex-wrap justify-center gap-x-0.5" />
         </div>
       </div>
     </header>

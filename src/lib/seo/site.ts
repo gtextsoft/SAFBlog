@@ -10,13 +10,13 @@ export const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ??
   "https://blog.stephenakintayofoundation.org";
 
-export const SITE_NAME = "Stephen Akintayo Foundation";
+export const SITE_NAME = "The Blueprint";
 
-export const SITE_TAGLINE = "Stories of Education & Community Empowerment";
+export const SITE_TAGLINE = "A Media Brand by Stephen Akintayo Productions";
 
 /** Keep ~120–155 characters so SERP snippets and SEO audits accept it. */
 export const SITE_DESCRIPTION =
-  "Field reporting from the Stephen Akintayo Foundation on education, sustainable development, and community empowerment across Nigeria and beyond.";
+  "Stories, insights, and ideas shaping the future of business, leadership, innovation, and impact — from The Blueprint by Stephen Akintayo Productions.";
 
 export const SITE_LOCALE = "en_NG";
 
@@ -29,16 +29,10 @@ export function absoluteUrl(path = "/"): string {
 }
 
 /**
- * Social profiles, emitted as schema.org `sameAs`, tying this site to the
- * Foundation's established entity in the Knowledge Graph.
+ * Social profiles, emitted as schema.org `sameAs`.
  *
- * Only include profiles belonging to the ORGANISATION. Stephen Akintayo's
- * personal profiles (Forbes Councils, LinkedIn, etc.) describe a Person, not
- * the NGO — listing them here asserts the two are the same entity, which is a
- * false claim. Those belong on a Person node, e.g. an author page.
- *
- * A wrong sameAs is worse than none: it can bind the site to the wrong entity.
- * Every URL here must be verified as officially the Foundation's.
+ * Only include verified organisation profiles. A wrong sameAs is worse than
+ * none: it can bind the site to the wrong entity.
  */
 export const SOCIAL_PROFILES: string[] = [
   "https://www.facebook.com/stephenakintayofoundation/",

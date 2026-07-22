@@ -57,7 +57,7 @@ export default async function AdminDashboard() {
   const attention = [
     pendingComments.length > 0 && {
       href: "/admin/comments?status=pending",
-      label: `${pendingComments.length} comment${pendingComments.length === 1 ? "" : "s"} awaiting moderation`,
+      label: `${pendingComments.length} legacy pending comment${pendingComments.length === 1 ? "" : "s"}`,
       Icon: MessageSquare,
     },
     scheduled.length > 0 && {

@@ -39,16 +39,16 @@ export default function ContactPage() {
       <main id="main">
         <div className="border-b border-border">
           <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 md:py-20">
-            <p className="text-eyebrow uppercase tracking-[0.14em] text-primary">Contact</p>
+            <p className="text-eyebrow uppercase tracking-[0.16em] text-accent">Contact</p>
             <h1 className="mt-4 max-w-2xl text-4xl leading-[1.1] md:text-5xl">
-              Write to the Foundation
+              Get in touch
             </h1>
             <p className="mt-4 max-w-xl text-lg text-muted-foreground">
-              Questions about programmes, partnerships, or this site — send a note and we&rsquo;ll
-              get back to you. You can also email{" "}
+              Editorial tips, partnerships, brand spotlight inquiries, or general questions
+              send a note and we&rsquo;ll get back to you. You can also email{" "}
               <a
                 href={`mailto:${CONTACT_EMAIL}`}
-                className="text-primary transition-colors hover:text-primary-hover"
+                className="text-primary transition-colors hover:text-accent"
               >
                 {CONTACT_EMAIL}
               </a>

@@ -40,7 +40,7 @@ export function MobileNav({ items }: { items: { href: string; label: string }[] 
   }, [open]);
 
   return (
-    <div className="md:hidden">
+    <div className="lg:hidden">
       <button
         ref={triggerRef}
         type="button"
@@ -61,7 +61,7 @@ export function MobileNav({ items }: { items: { href: string; label: string }[] 
         <div
           id="mobile-nav"
           ref={panelRef}
-          className="absolute inset-x-0 top-16 border-b border-border bg-background p-4 shadow-overlay"
+          className="absolute inset-x-0 top-full max-h-[min(70vh,32rem)] overflow-y-auto border-b border-border bg-background p-4 shadow-overlay"
         >
           <NavLinks items={items} className="flex flex-col items-stretch" onNavigate={() => setOpen(false)} />
         </div>

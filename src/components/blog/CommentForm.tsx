@@ -123,7 +123,7 @@ export function CommentForm({
       )}
 
       <p className="text-xs text-muted-foreground">
-        Comments are moderated before they appear. Your email is not published.
+        Your comment appears immediately. Your email is not published.
       </p>
 
       <SubmitButton />

@@ -160,11 +160,11 @@ export function AdminShell({
             href="/admin"
             className={cn("font-display text-base font-semibold", collapsed && "sr-only")}
           >
-            SAF <span className="text-muted-foreground">Admin</span>
+            Blueprint <span className="text-muted-foreground">Admin</span>
           </Link>
           {collapsed && (
-            <Link href="/admin" className="font-display text-sm font-semibold" aria-label="SAF Admin">
-              S
+            <Link href="/admin" className="font-display text-sm font-semibold" aria-label="Blueprint Admin">
+              B
             </Link>
           )}
           <button
@@ -222,7 +222,7 @@ export function AdminShell({
           <aside className="absolute inset-y-0 left-0 flex w-64 flex-col border-r border-border bg-card shadow-overlay">
             <div className="flex h-14 items-center justify-between border-b border-border px-3">
               <Link href="/admin" className="font-display text-base font-semibold">
-                SAF <span className="text-muted-foreground">Admin</span>
+                Blueprint <span className="text-muted-foreground">Admin</span>
               </Link>
               <button
                 type="button"
@@ -264,7 +264,7 @@ export function AdminShell({
           </button>
 
           <p className="font-display text-sm font-semibold md:hidden">
-            SAF <span className="text-muted-foreground">Admin</span>
+            Blueprint <span className="text-muted-foreground">Admin</span>
           </p>
 
           <div className="ml-auto flex items-center gap-1">

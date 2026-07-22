@@ -2,7 +2,7 @@
 
 import { useTransition } from "react";
 
-import { setCommentStatus } from "@/app/blog/[slug]/comments-actions";
+import { deleteComment, setCommentStatus } from "@/app/blog/[slug]/comments-actions";
 import type { Comment } from "@/lib/queries/comments";
 import { cn } from "@/lib/utils";
 
@@ -31,7 +31,7 @@ export function CommentModerationRow({ comment }: { comment: Comment }) {
               "border-destructive/40 bg-destructive/5 text-destructive",
           )}
         >
-          {comment.status}
+          {comment.status === "rejected" ? "hidden" : comment.status}
         </span>
         <span>{date}</span>
         {comment.postTitle && <span>· {comment.postTitle}</span>}
@@ -51,7 +51,7 @@ export function CommentModerationRow({ comment }: { comment: Comment }) {
             onClick={() => startTransition(() => setCommentStatus(comment.id, "approved"))}
             className="inline-flex min-h-9 items-center rounded border border-border px-3 text-xs font-medium hover:border-rule-strong"
           >
-            Approve
+            Show
           </button>
         )}
         {comment.status !== "rejected" && (
@@ -61,7 +61,7 @@ export function CommentModerationRow({ comment }: { comment: Comment }) {
             onClick={() => startTransition(() => setCommentStatus(comment.id, "rejected"))}
             className="inline-flex min-h-9 items-center rounded border border-border px-3 text-xs font-medium hover:border-rule-strong"
           >
-            Reject
+            Hide
           </button>
         )}
         {comment.status !== "spam" && (
@@ -74,6 +74,17 @@ export function CommentModerationRow({ comment }: { comment: Comment }) {
             Spam
           </button>
         )}
+        <button
+          type="button"
+          disabled={pending}
+          onClick={() => {
+            if (!window.confirm("Delete this comment permanently?")) return;
+            startTransition(() => deleteComment(comment.id));
+          }}
+          className="inline-flex min-h-9 items-center rounded border border-destructive/40 px-3 text-xs font-medium text-destructive hover:bg-destructive/5"
+        >
+          Delete
+        </button>
       </div>
     </li>
   );

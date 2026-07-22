@@ -3,7 +3,7 @@ import { ImageResponse } from "next/og";
 import { getPostBySlug } from "@/lib/queries/posts";
 import { SITE_NAME } from "@/lib/seo/site";
 
-export const alt = "Stephen Akintayo Foundation";
+export const alt = SITE_NAME;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -38,21 +38,20 @@ export default async function OpengraphImage({ params }: { params: Promise<{ slu
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
-          // Matches --background / --foreground in the light theme.
-          backgroundColor: "#FCFBF7",
-          color: "#16181D",
+          backgroundColor: "#FFFFFF",
+          color: "#1F2937",
           padding: "72px",
           fontFamily: "Georgia, serif",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <div style={{ width: 28, height: 28, backgroundColor: "#1F49AC" }} />
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <div style={{ width: 28, height: 4, backgroundColor: "#C9A227" }} />
           <div
             style={{
-              fontSize: 22,
+              fontSize: 18,
               letterSpacing: 3,
               textTransform: "uppercase",
-              color: "#5B616E",
+              color: "#C9A227",
               fontFamily: "system-ui, sans-serif",
             }}
           >
@@ -66,8 +65,7 @@ export default async function OpengraphImage({ params }: { params: Promise<{ slu
             fontSize: title.length > 80 ? 56 : 68,
             lineHeight: 1.12,
             letterSpacing: -1.5,
-            // ImageResponse has no line-clamp; the font-size step above keeps
-            // long headlines inside the frame.
+            color: "#111827",
             maxHeight: 340,
             overflow: "hidden",
           }}
@@ -81,7 +79,7 @@ export default async function OpengraphImage({ params }: { params: Promise<{ slu
             alignItems: "center",
             gap: 16,
             fontSize: 24,
-            color: "#5B616E",
+            color: "#64748B",
             fontFamily: "system-ui, sans-serif",
           }}
         >

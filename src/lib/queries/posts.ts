@@ -350,6 +350,35 @@ export const getAdjacentPosts = cache(
   },
 );
 
+/**
+ * Trending list ordered by existing `view_count`. Read-only helper for
+ * homepage presentation — no schema or admin changes.
+ */
+export const getTrendingPosts = cache(async (limit = 5): Promise<PostSummary[]> => {
+  return unstable_cache(
+    async () => {
+      const supabase = createPublicClient();
+
+      const { data, error } = await supabase
+        .from("posts")
+        .select(POST_SELECT)
+        .eq("status", "published")
+        .order("view_count", { ascending: false })
+        .order("published_at", { ascending: false })
+        .limit(limit);
+
+      if (error) {
+        console.error("getTrendingPosts", { message: error.message });
+        return [];
+      }
+
+      return ((data ?? []) as unknown as PostRow[]).map((row) => toSummary(mapPost(row)));
+    },
+    ["trending-posts", String(limit)],
+    { tags: [POST_CACHE_TAG], revalidate: 60 },
+  )();
+});
+
 /** Draft/scheduled preview by opaque token. Uses service role (bypasses RLS). */
 export async function getPostByPreviewToken(token: string): Promise<Post | null> {
   if (!token) return null;

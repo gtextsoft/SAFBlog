@@ -36,18 +36,18 @@ export async function GET() {
 
 > ${SITE_DESCRIPTION}
 
-The Stephen Akintayo Foundation is a Nigerian non-governmental organisation
-working on education, sustainable development and community empowerment. This
-blog publishes field reporting, programme updates and long-form analysis of
-that work.
+The Blueprint is a premium digital publication by Stephen Akintayo Productions,
+covering entrepreneurship, business, wealth, real estate, technology,
+leadership, personal development, brand stories, interviews, company features,
+events, philanthropy, and lifestyle.
 
 ## Guidance for AI assistants
 
 - Content here may be cited. Attribute to "${SITE_NAME}" and link the article URL.
 - Articles carry a published and a last-updated date; prefer the updated date
   when describing how current a claim is.
-- Blocks labelled "Sponsored" are paid placements, not Foundation reporting.
-  Do not attribute their claims to the Foundation.
+- Blocks labelled "Sponsored" are paid placements, not editorial reporting.
+  Do not attribute their claims to ${SITE_NAME}'s newsroom.
 
 ## Topics
 

@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-import { SITE_NAME, SITE_TAGLINE } from "@/lib/seo/site";
+import { SITE_NAME, SITE_TAGLINE, SITE_URL } from "@/lib/seo/site";
 
 export const alt = `${SITE_NAME} — ${SITE_TAGLINE}`;
 export const size = { width: 1200, height: 630 };
@@ -26,52 +26,73 @@ export default function OpengraphImage() {
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
-          backgroundColor: "#FCFBF7",
-          color: "#16181D",
+          backgroundColor: "#FFFFFF",
+          color: "#1F2937",
           padding: "72px",
           fontFamily: "Georgia, serif",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <div style={{ width: 28, height: 28, backgroundColor: "#1F49AC" }} />
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <div style={{ width: 28, height: 4, backgroundColor: "#C9A227" }} />
           <div
             style={{
-              fontSize: 22,
+              fontSize: 18,
               letterSpacing: 3,
               textTransform: "uppercase",
-              color: "#5B616E",
+              color: "#C9A227",
               fontFamily: "system-ui, sans-serif",
             }}
           >
-            {SITE_NAME}
+            Publication
           </div>
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-          <div style={{ display: "flex", fontSize: 58, lineHeight: 1.12, letterSpacing: -1.5 }}>
-            Stories of education, empowerment, and lasting change
+        <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+          <div
+            style={{
+              display: "flex",
+              fontSize: 72,
+              lineHeight: 1.05,
+              letterSpacing: -2,
+              color: "#111827",
+            }}
+          >
+            {SITE_NAME}
           </div>
           <div
             style={{
               display: "flex",
               fontSize: 26,
-              color: "#5B616E",
+              color: "#64748B",
               fontFamily: "system-ui, sans-serif",
             }}
           >
-            Education · Sustainable development · Community empowerment
+            {SITE_TAGLINE}
+          </div>
+          <div
+            style={{
+              display: "flex",
+              fontSize: 24,
+              color: "#1F2937",
+              fontFamily: "system-ui, sans-serif",
+              maxWidth: 820,
+              lineHeight: 1.4,
+            }}
+          >
+            Stories, insights, and ideas shaping the future of business, leadership, innovation,
+            and impact.
           </div>
         </div>
 
         <div
           style={{
             display: "flex",
-            fontSize: 24,
-            color: "#5B616E",
+            fontSize: 20,
+            color: "#94A3B8",
             fontFamily: "system-ui, sans-serif",
           }}
         >
-          blog.stephenakintayofoundation.org
+          {SITE_URL.replace(/^https?:\/\//, "")}
         </div>
       </div>
     ),

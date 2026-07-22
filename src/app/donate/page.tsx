@@ -11,7 +11,7 @@ import { absoluteUrl, SITE_LANGUAGE, SITE_NAME } from "@/lib/seo/site";
 
 export const metadata: Metadata = {
   title: "Donate",
-  description: `Support the work of the ${SITE_NAME} with a one-time donation.`,
+  description: `Support ${SITE_NAME} with a one-time donation.`,
   alternates: { canonical: "/donate" },
 };
 
@@ -42,13 +42,13 @@ export default function DonatePage() {
       <main id="main">
         <div className="border-b border-border">
           <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 md:py-20">
-            <p className="text-eyebrow uppercase tracking-[0.14em] text-primary">Give</p>
+            <p className="text-eyebrow uppercase tracking-[0.16em] text-accent">Give</p>
             <h1 className="mt-4 max-w-2xl text-4xl leading-[1.1] md:text-5xl">
-              Support the Foundation
+              Support the work
             </h1>
             <p className="mt-4 max-w-xl text-lg text-muted-foreground">
-              Your gift funds education, youth empowerment, and community development programmes.
-              Choose any amount on the secure Stripe checkout page.
+              Your gift helps sustain independent editorial storytelling at {SITE_NAME}. Choose any
+              amount on the secure Stripe checkout page.
             </p>
           </div>
         </div>

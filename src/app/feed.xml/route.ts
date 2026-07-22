@@ -49,7 +49,7 @@ ${post.categories.map((c) => `      <category>${xml(c.name)}</category>`).join("
   const body = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:dc="http://purl.org/dc/elements/1.1/">
   <channel>
-    <title>${xml(`${SITE_NAME} — Stories`)}</title>
+    <title>${xml(`${SITE_NAME} — Articles`)}</title>
     <link>${xml(SITE_URL)}</link>
     <description>${xml(SITE_DESCRIPTION)}</description>
     <language>${SITE_LANGUAGE}</language>

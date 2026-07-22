@@ -9,7 +9,7 @@ import { absoluteUrl } from "@/lib/seo/site";
  * not exist and pointed at the wrong domain (safoundation.org).
  *
  * AI crawlers are explicitly allowed. This is a deliberate policy decision by
- * the Foundation, not a default: it makes the blog's content eligible to be
+ * the publication, not a default: it makes the site's content eligible to be
  * cited by AI answer engines, and also available for model training. Removing
  * a bot from this list is how you opt out of both.
  *

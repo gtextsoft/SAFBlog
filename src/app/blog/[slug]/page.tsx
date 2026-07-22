@@ -129,7 +129,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
           faqPageSchema(post.faq, `/blog/${post.slug}`),
           breadcrumbSchema([
             { name: "Home", url: "/" },
-            { name: "Stories", url: "/blog" },
+            { name: "Articles", url: "/blog" },
             { name: post.title, url: `/blog/${post.slug}` },
           ]),
         )}
@@ -152,7 +152,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
                   <li aria-hidden="true">/</li>
                   <li>
                     <Link href="/blog" className="transition-colors duration-150 hover:text-foreground">
-                      Stories
+                      Articles
                     </Link>
                   </li>
                 </ol>
@@ -189,7 +189,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
                       {post.author.fullName}
                     </Link>
                   ) : (
-                    (post.author?.fullName ?? "SAF Editorial Team")
+                    (post.author?.fullName ?? "The Blueprint Editorial Team")
                   )}
                 </span>
                 {date && (
@@ -267,7 +267,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
             {/*
               Sibling of the prose container, never inside it: the article body
               feeds articleBody in the BlogPosting schema and the llms.txt
-              corpus, and sponsor copy must not be quoted as Foundation writing.
+              corpus, and sponsor copy must not be quoted as editorial writing.
             */}
             {promotion && <InArticlePromotion promotion={promotion} />}
 

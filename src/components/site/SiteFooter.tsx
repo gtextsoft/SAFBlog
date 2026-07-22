@@ -2,8 +2,9 @@ import Link from "next/link";
 
 import { SubscribeForm } from "@/components/newsletter/SubscribeForm";
 import { FooterPromotion } from "@/components/promotions/PromotionSlot";
+import { NAV_ITEMS } from "@/components/site/SiteHeader";
 import type { Promotion } from "@/lib/types/promotion";
-import { CONTACT_EMAIL, SITE_NAME, SOCIAL_PROFILES } from "@/lib/seo/site";
+import { CONTACT_EMAIL, SITE_NAME, SITE_TAGLINE, SOCIAL_PROFILES } from "@/lib/seo/site";
 
 /**
  * Site footer (presentational).
@@ -14,25 +15,36 @@ import { CONTACT_EMAIL, SITE_NAME, SOCIAL_PROFILES } from "@/lib/seo/site";
 export function SiteFooter({ promotion = null }: { promotion?: Promotion | null }) {
   const year = new Date().getFullYear();
 
+  const explore = [
+    { href: "/blog", label: "Latest Articles" },
+    { href: "/newsletter", label: "Newsletter" },
+    ...NAV_ITEMS.filter((item) => item.href !== "/"),
+    { href: "/search", label: "Search" },
+  ];
+
   return (
-    <footer className="mt-20 border-t border-border bg-surface-sunken">
-      <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
-        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
+    <footer className="mt-24 border-t border-border bg-surface-sunken">
+      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
+        <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-4">
           <div className="lg:col-span-2">
-            <p className="font-display text-lg font-semibold">{SITE_NAME}</p>
-            <p className="mt-2 max-w-sm text-sm text-muted-foreground">
-              Creating lasting change through education, sustainable development, and community
-              empowerment.
+            <div className="h-0.5 w-10 bg-accent" aria-hidden="true" />
+            <p className="mt-4 font-display text-2xl font-semibold tracking-tight">{SITE_NAME}</p>
+            <p className="mt-1 text-xs uppercase tracking-[0.14em] text-muted-foreground">
+              {SITE_TAGLINE}
+            </p>
+            <p className="mt-4 max-w-md text-sm leading-relaxed text-muted-foreground">
+              Stories, insights, and ideas shaping the future of business, leadership, innovation,
+              and impact.
             </p>
             <a
               href={`mailto:${CONTACT_EMAIL}`}
-              className="mt-4 inline-flex min-h-11 items-center text-sm text-primary transition-colors duration-150 hover:text-primary-hover"
+              className="mt-5 inline-flex min-h-11 items-center text-sm text-primary transition-colors duration-150 hover:text-accent"
             >
               {CONTACT_EMAIL}
             </a>
 
-            <div className="mt-6 max-w-sm">
-              <h2 className="text-eyebrow uppercase tracking-[0.14em] text-muted-foreground">
+            <div className="mt-8 max-w-sm">
+              <h2 className="text-eyebrow uppercase tracking-[0.16em] text-accent">
                 Get new stories by email
               </h2>
               <SubscribeForm source="footer" layout="inline" className="mt-3" />
@@ -40,22 +52,13 @@ export function SiteFooter({ promotion = null }: { promotion?: Promotion | null 
           </div>
 
           <nav aria-label="Footer">
-            <h2 className="text-eyebrow uppercase tracking-[0.14em] text-muted-foreground">
-              Explore
-            </h2>
-            <ul className="mt-3 space-y-1">
-              {[
-                { href: "/blog", label: "All stories" },
-                { href: "/search", label: "Search" },
-                { href: "/about", label: "About the Foundation" },
-                { href: "/contact", label: "Contact" },
-                { href: "/newsletter", label: "Newsletter" },
-                { href: "/donate", label: "Donate" },
-              ].map(({ href, label }) => (
-                <li key={href}>
+            <h2 className="text-eyebrow uppercase tracking-[0.16em] text-accent">Explore</h2>
+            <ul className="mt-4 space-y-0.5">
+              {explore.map(({ href, label }) => (
+                <li key={`${href}-${label}`}>
                   <Link
                     href={href}
-                    className="inline-flex min-h-11 items-center text-sm text-muted-foreground transition-colors duration-150 hover:text-foreground"
+                    className="inline-flex min-h-10 items-center text-sm text-muted-foreground transition-colors duration-150 hover:text-foreground"
                   >
                     {label}
                   </Link>
@@ -68,18 +71,16 @@ export function SiteFooter({ promotion = null }: { promotion?: Promotion | null 
             {promotion && <FooterPromotion promotion={promotion} />}
 
             <div>
-              <h2 className="text-eyebrow uppercase tracking-[0.14em] text-muted-foreground">
-                Follow
-              </h2>
+              <h2 className="text-eyebrow uppercase tracking-[0.16em] text-accent">Follow</h2>
               {SOCIAL_PROFILES.length > 0 ? (
-                <ul className="mt-3 space-y-1">
+                <ul className="mt-4 space-y-0.5">
                   {SOCIAL_PROFILES.map((url) => (
                     <li key={url}>
                       <a
                         href={url}
                         rel="me noopener"
                         target="_blank"
-                        className="inline-flex min-h-11 items-center text-sm text-muted-foreground transition-colors duration-150 hover:text-foreground"
+                        className="inline-flex min-h-10 items-center text-sm text-muted-foreground transition-colors duration-150 hover:text-foreground"
                       >
                         {new URL(url).hostname.replace(/^www\./, "")}
                       </a>
@@ -87,30 +88,22 @@ export function SiteFooter({ promotion = null }: { promotion?: Promotion | null 
                   ))}
                 </ul>
               ) : (
-                <p className="mt-3 text-sm text-muted-foreground">Social links coming soon.</p>
+                <p className="mt-4 text-sm text-muted-foreground">Social links coming soon.</p>
               )}
             </div>
           </div>
         </div>
 
-        <div className="mt-10 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-6 text-sm text-muted-foreground">
+        <div className="mt-12 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-8 text-sm text-muted-foreground">
           <p>
             © {year} {SITE_NAME}. All rights reserved.
           </p>
-          <div className="flex flex-wrap items-center gap-4">
-            <Link
-              href="/donate"
-              className="inline-flex min-h-11 items-center font-medium text-primary transition-colors duration-150 hover:text-primary-hover"
-            >
-              Support our work
-            </Link>
-            <Link
-              href="/feed.xml"
-              className="inline-flex min-h-11 items-center transition-colors duration-150 hover:text-foreground"
-            >
-              RSS
-            </Link>
-          </div>
+          <Link
+            href="/feed.xml"
+            className="inline-flex min-h-11 items-center transition-colors duration-150 hover:text-foreground"
+          >
+            RSS
+          </Link>
         </div>
       </div>
     </footer>

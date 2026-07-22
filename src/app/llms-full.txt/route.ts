@@ -9,7 +9,7 @@ export const revalidate = 300;
 /**
  * /llms-full.txt — the complete text of every published article in one fetch.
  *
- * Point of this file: an assistant answering a question about the Foundation
+ * Point of this file: an assistant answering a question about The Blueprint
  * gets the actual article text rather than a snippet it has to guess around,
  * which is what produces accurate, attributable citations instead of
  * plausible-sounding paraphrase.

@@ -34,8 +34,10 @@ export function NavLinks({
             onClick={onNavigate}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "inline-flex min-h-11 items-center rounded px-3 text-sm transition-colors duration-150",
-              active ? "font-medium text-foreground" : "text-muted-foreground hover:text-foreground",
+              "inline-flex min-h-10 items-center px-2.5 text-[0.8125rem] tracking-wide transition-colors duration-150",
+              active
+                ? "font-medium text-foreground underline decoration-accent decoration-2 underline-offset-[0.55rem]"
+                : "text-muted-foreground hover:text-foreground",
             )}
           >
             {label}

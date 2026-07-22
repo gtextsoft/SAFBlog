@@ -60,9 +60,10 @@ export async function submitComment(
   const { postId, postSlug, authorName, authorEmail, body, website } = parsed.data;
 
   if (website) {
+    // Honeypot trip — pretend success without writing.
     return {
       status: "success",
-      message: "Thanks — your comment was submitted and is awaiting moderation.",
+      message: "Thanks — your comment is live.",
     };
   }
 
@@ -72,7 +73,7 @@ export async function submitComment(
     author_name: authorName,
     author_email: authorEmail,
     body,
-    status: "pending",
+    status: "approved",
   });
 
   if (error) {
@@ -86,7 +87,7 @@ export async function submitComment(
   revalidatePath(`/blog/${postSlug}`);
   return {
     status: "success",
-    message: "Thanks — your comment was submitted and is awaiting moderation.",
+    message: "Thanks — your comment is live.",
   };
 }
 
@@ -103,4 +104,20 @@ export async function setCommentStatus(
   }
 
   revalidatePath("/admin/comments");
+  // Public article pages only show approved comments.
+  revalidatePath("/blog", "layout");
+}
+
+/** Permanently remove a comment. */
+export async function deleteComment(id: string) {
+  const { supabase } = await requireRole("admin", "editor");
+
+  const { error } = await supabase.from("comments").delete().eq("id", id);
+  if (error) {
+    console.error("deleteComment", error.message);
+    return;
+  }
+
+  revalidatePath("/admin/comments");
+  revalidatePath("/blog", "layout");
 }

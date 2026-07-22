@@ -1,35 +1,28 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { Fragment } from "react";
 
 import { FeaturedPostCard, PostCard } from "@/components/blog/PostCard";
-import { BlogSidebar } from "@/components/blog/BlogSidebar";
-import { SocialShare } from "@/components/blog/SocialShare";
+import { SubscribeForm } from "@/components/newsletter/SubscribeForm";
 import { InFeedPromotion } from "@/components/promotions/PromotionSlot";
 import { PublicFooter } from "@/components/site/PublicFooter";
 import { SiteHeader } from "@/components/site/SiteHeader";
-import { getPublishedPosts } from "@/lib/queries/posts";
+import { getPublishedPosts, getTrendingPosts } from "@/lib/queries/posts";
 import { getPromotions } from "@/lib/queries/promotions";
-import { getCategoriesWithCounts } from "@/lib/queries/taxonomy";
+import { getCategoryBySlug, getPostsByCategory } from "@/lib/queries/taxonomy";
 import {
-  absoluteUrl,
   SITE_DESCRIPTION,
   SITE_NAME,
   SITE_TAGLINE,
-  SOCIAL_PROFILES,
 } from "@/lib/seo/site";
 
 export const revalidate = 60;
 
-/** Insert the homepage feed promotion after this many latest-story cards. */
-const HOME_PROMO_AFTER = 2;
+const HOME_FETCH = 14;
+const LATEST_COUNT = 6;
+const PICKS_COUNT = 3;
+const INTERVIEWS_COUNT = 3;
 
-/**
- * Homepage-specific metadata. The root layout default is brand-first; this
- * page is the stories hub, so title/description must say that clearly for
- * SERPs and on-page SEO audits.
- */
 export const metadata: Metadata = {
   title: {
     absolute: `${SITE_NAME} — ${SITE_TAGLINE}`,
@@ -45,294 +38,230 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  const [{ items: posts }, homePromotions, categories] = await Promise.all([
-    getPublishedPosts(1, 7),
-    getPromotions("home_feed", 1),
-    getCategoriesWithCounts(),
+  const [{ items: posts }, trending, homePromotions, interviewsCategory] = await Promise.all([
+    getPublishedPosts(1, HOME_FETCH),
+    getTrendingPosts(5),
+    getPromotions("home_feed", 2),
+    getCategoryBySlug("interviews"),
   ]);
-  const [featured, ...rest] = posts;
-  const homePromotion = homePromotions[0];
-  const topicLinks = categories.filter((c) => c.postCount > 0).slice(0, 6);
-  const facebookUrl = SOCIAL_PROFILES[0];
+
+  const [featured, ...afterFeatured] = posts;
+  const latest = afterFeatured.slice(0, LATEST_COUNT);
+  const editorsPicks = afterFeatured.slice(LATEST_COUNT, LATEST_COUNT + PICKS_COUNT);
+
+  const interviewResults = interviewsCategory
+    ? await getPostsByCategory(interviewsCategory.id, 1, INTERVIEWS_COUNT)
+    : { items: [] as typeof posts };
+  const interviews = interviewResults.items;
+
+  const brandSpotlights = homePromotions;
 
   return (
     <>
       <SiteHeader />
 
       <main id="main">
-        <section className="border-b border-border" aria-labelledby="home-heading">
-          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 md:py-24">
-            <p className="text-eyebrow uppercase tracking-[0.14em] text-primary">
-              {SITE_NAME}
-            </p>
+        <section
+          className="relative overflow-hidden border-b border-border"
+          aria-labelledby="home-heading"
+        >
+          <div
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_hsl(var(--accent)/0.08),_transparent_55%)]"
+            aria-hidden="true"
+          />
+          <div className="relative mx-auto max-w-7xl px-4 py-20 sm:px-6 md:py-28">
             <h1
               id="home-heading"
-              className="mt-4 max-w-3xl text-4xl leading-[1.08] md:text-6xl"
+              className="max-w-4xl font-display text-5xl leading-[1.02] tracking-tight md:text-7xl"
             >
-              Stories of education, empowerment, and lasting change
+              {SITE_NAME}
             </h1>
-            <p className="mt-6 max-w-2xl text-lg text-muted-foreground">
-              Field reporting from the {SITE_NAME} on education, sustainable development, and
-              community empowerment across Nigeria and beyond — the programmes, the people, and
-              what actually changes.
+            <p className="mt-4 text-sm uppercase tracking-[0.14em] text-muted-foreground md:text-[0.8125rem]">
+              {SITE_TAGLINE}
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
+            <p className="mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground md:text-xl">
+              Stories, insights, and ideas shaping the future of business, leadership, innovation,
+              and impact.
+            </p>
+            <div className="mt-10 flex flex-wrap gap-3">
               <Link
                 href="/blog"
-                className="inline-flex min-h-11 items-center gap-2 rounded bg-primary px-5 text-sm font-medium text-primary-foreground transition-colors duration-150 hover:bg-primary-hover"
+                className="inline-flex min-h-11 items-center gap-2 rounded bg-primary px-6 text-sm font-medium text-primary-foreground transition-colors duration-150 hover:bg-primary-hover"
               >
-                Read the stories
+                Latest articles
                 <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </Link>
               <Link
-                href="/about"
-                className="inline-flex min-h-11 items-center rounded border border-border px-5 text-sm font-medium transition-colors duration-150 hover:border-rule-strong"
+                href="/newsletter"
+                className="inline-flex min-h-11 items-center rounded border border-border px-6 text-sm font-medium transition-colors duration-150 hover:border-accent hover:text-accent"
               >
-                About the Foundation
-              </Link>
-              <Link
-                href="/donate"
-                className="inline-flex min-h-11 items-center rounded border border-border px-5 text-sm font-medium transition-colors duration-150 hover:border-rule-strong"
-              >
-                Support the work
+                Subscribe
               </Link>
             </div>
-            <SocialShare
-              className="mt-8"
-              url={absoluteUrl("/")}
-              title={`${SITE_NAME} — ${SITE_TAGLINE}`}
-              description={SITE_DESCRIPTION}
-            />
           </div>
         </section>
 
-        <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
-          <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-16">
-            <div>
-              {/*
-                Substantive intro copy lives in real paragraphs so crawlers and
-                SEO checkers see 250+ useful words, title keywords, and links —
-                not only a feed of cards.
-              */}
-              <section className="measure" aria-labelledby="about-reporting">
-                <h2 id="about-reporting" className="text-2xl md:text-3xl">
-                  {SITE_TAGLINE} from the {SITE_NAME}
+        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-20">
+          <section className="measure max-w-3xl" aria-labelledby="about-publication">
+            <h2 id="about-publication" className="font-display text-2xl md:text-3xl">
+              A premium digital publication for ambitious leaders
+            </h2>
+            <p className="mt-4 text-muted-foreground leading-relaxed">
+              {SITE_NAME} covers entrepreneurship, business, wealth, real estate, technology,
+              leadership, personal development, brand stories, interviews, company features,
+              events, philanthropy, and lifestyle — written for CEOs, founders, investors, and
+              global brands.
+            </p>
+          </section>
+
+          {featured && (
+            <section className="mt-16" aria-labelledby="featured-heading">
+              <div className="mb-8 flex items-end justify-between gap-4 border-b border-border pb-4">
+                <h2 id="featured-heading" className="font-display text-2xl md:text-3xl">
+                  Featured Story
                 </h2>
-                <div className="prose-editorial mt-6 space-y-5 text-base text-muted-foreground">
-                  <p>
-                    This blog is the public record of the {SITE_NAME}&rsquo;s work in education,
-                    sustainable development, and community empowerment. We publish stories of
-                    education in classrooms and communities, profiles of people building new
-                    skills, and updates from programmes that turn opportunity into lasting change
-                    across Nigeria and beyond.
-                  </p>
-                  <p>
-                    If you are looking for {SITE_TAGLINE.toLowerCase()}, start with the{" "}
-                    <Link href="/blog" className="text-primary underline-offset-2 hover:underline">
-                      full story archive
-                    </Link>
-                    . Each piece is written for readers who want clear reporting — what happened,
-                    who was involved, and why it matters — rather than slogans. Browse by topic,
-                    follow an author, or use{" "}
-                    <Link href="/search" className="text-primary underline-offset-2 hover:underline">
-                      search
-                    </Link>{" "}
-                    when you need a specific programme, place, or theme.
-                  </p>
-                  <p>
-                    Education sits at the centre of our reporting: scholarships, school support,
-                    skills training, and the everyday barriers families face when quality learning
-                    is out of reach. Sustainable development stories cover livelihoods,
-                    infrastructure, and community projects that are built to last. Community
-                    empowerment pieces follow leadership, youth programmes, and capacity-building
-                    that help people shape their own futures.
-                  </p>
-                  <p>
-                    New readers often begin with{" "}
-                    <Link href="/about" className="text-primary underline-offset-2 hover:underline">
-                      about the Foundation
-                    </Link>{" "}
-                    for mission and programmes, then return here for field updates. You can{" "}
-                    <Link
-                      href="/newsletter"
-                      className="text-primary underline-offset-2 hover:underline"
-                    >
-                      subscribe to the newsletter
-                    </Link>{" "}
-                    for stories by email,{" "}
-                    <Link href="/contact" className="text-primary underline-offset-2 hover:underline">
-                      contact the team
-                    </Link>{" "}
-                    with questions or partnership ideas, or{" "}
-                    <Link href="/donate" className="text-primary underline-offset-2 hover:underline">
-                      donate
-                    </Link>{" "}
-                    to support the work behind these stories.
-                  </p>
-                  <p>
-                    We also share updates on the Foundation&rsquo;s{" "}
-                    {facebookUrl ? (
-                      <a
-                        href={facebookUrl}
-                        rel="me noopener"
-                        target="_blank"
-                        className="text-primary underline-offset-2 hover:underline"
-                      >
-                        Facebook page
-                      </a>
-                    ) : (
-                      "social channels"
-                    )}
-                    . For a machine-readable feed of recent posts, use the{" "}
-                    <Link href="/feed.xml" className="text-primary underline-offset-2 hover:underline">
-                      RSS feed
-                    </Link>
-                    . Whether you are a community member, partner, journalist, or supporter, this
-                    site is meant to make the Foundation&rsquo;s education and empowerment work
-                    easy to find, read, and share.
-                  </p>
-                </div>
-              </section>
+              </div>
+              <FeaturedPostCard post={featured} />
+            </section>
+          )}
 
-              {posts.length === 0 ? (
-                <div className="mt-14 rounded-lg border border-dashed border-border py-20 text-center">
-                  <h2 className="font-display text-xl">No stories published yet</h2>
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    Check back soon, or subscribe to hear when the first one lands.
-                  </p>
-                  <Link
-                    href="/newsletter"
-                    className="mt-6 inline-flex min-h-11 items-center rounded bg-primary px-5 text-sm font-medium text-primary-foreground"
-                  >
-                    Subscribe
-                  </Link>
-                </div>
-              ) : (
-                <>
-                  {featured && (
-                    <section className="mt-14" aria-labelledby="featured-heading">
-                      <h2
-                        id="featured-heading"
-                        className="mb-6 border-b border-border pb-3 text-2xl"
-                      >
-                        Featured story
-                      </h2>
-                      <FeaturedPostCard post={featured} />
-                    </section>
-                  )}
-
-                  {rest.length > 0 && (
-                    <section className="mt-12" aria-labelledby="latest-heading">
-                      <div className="flex items-baseline justify-between gap-4 border-b border-border pb-3">
-                        <h2 id="latest-heading" className="text-2xl">
-                          Latest stories
-                        </h2>
-                        <Link
-                          href="/blog"
-                          className="inline-flex min-h-11 items-center gap-1 text-sm text-primary transition-colors duration-150 hover:text-primary-hover"
-                        >
-                          View all stories
-                          <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                        </Link>
-                      </div>
-
-                      <div className="mt-8 grid gap-x-8 gap-y-12 sm:grid-cols-2">
-                        {rest.map((post, index) => (
-                          <Fragment key={post.id}>
-                            <PostCard post={post} />
-                            {homePromotion && index === HOME_PROMO_AFTER - 1 && (
-                              <InFeedPromotion promotion={homePromotion} />
-                            )}
-                          </Fragment>
-                        ))}
-                      </div>
-                    </section>
-                  )}
-                </>
-              )}
-
-              <section className="mt-16 border-t border-border pt-12" aria-labelledby="explore-heading">
-                <h2 id="explore-heading" className="text-2xl">
-                  Explore the Foundation
+          {latest.length > 0 && (
+            <section className="mt-20" aria-labelledby="latest-heading">
+              <div className="mb-10 flex items-end justify-between gap-4 border-b border-border pb-4">
+                <h2 id="latest-heading" className="font-display text-2xl md:text-3xl">
+                  Latest Articles
                 </h2>
-                <p className="mt-3 max-w-2xl text-muted-foreground">
-                  Go deeper into our reporting on education and community empowerment, and the
-                  ways you can stay involved with the {SITE_NAME}.
-                </p>
+                <Link
+                  href="/blog"
+                  className="inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-accent"
+                >
+                  View all
+                  <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+                </Link>
+              </div>
+              <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 lg:gap-10">
+                {latest.map((post, index) => (
+                  <PostCard key={post.id} post={post} priority={index < 2} />
+                ))}
+              </div>
+            </section>
+          )}
 
-                <ul className="mt-6 grid gap-3 sm:grid-cols-2">
-                  {[
-                    {
-                      href: "/blog",
-                      label: "All stories",
-                      hint: "The full archive of field reporting and programme updates",
-                    },
-                    {
-                      href: "/about",
-                      label: "About the Foundation",
-                      hint: "Mission, vision, and the work behind the stories",
-                    },
-                    {
-                      href: "/newsletter",
-                      label: "Newsletter",
-                      hint: "New stories delivered by email when they publish",
-                    },
-                    {
-                      href: "/contact",
-                      label: "Contact",
-                      hint: "Reach the team with questions or partnership ideas",
-                    },
-                    {
-                      href: "/donate",
-                      label: "Donate",
-                      hint: "Support education and community programmes",
-                    },
-                    {
-                      href: "/search",
-                      label: "Search the archive",
-                      hint: "Find stories by topic, programme, or place",
-                    },
-                  ].map(({ href, label, hint }) => (
-                    <li key={href}>
-                      <Link
-                        href={href}
-                        className="group flex min-h-11 flex-col border-b border-border py-3 transition-colors duration-150 hover:border-primary"
+          {editorsPicks.length > 0 && (
+            <section className="mt-20" aria-labelledby="picks-heading">
+              <div className="mb-10 border-b border-border pb-4">
+                <h2 id="picks-heading" className="font-display text-2xl md:text-3xl">
+                  Editor&rsquo;s Picks
+                </h2>
+              </div>
+              <div className="grid gap-8 md:grid-cols-3 md:gap-10">
+                {editorsPicks.map((post) => (
+                  <PostCard key={post.id} post={post} />
+                ))}
+              </div>
+            </section>
+          )}
+
+          <div className="mt-20 grid gap-16 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] lg:gap-20">
+            {trending.length > 0 && (
+              <section aria-labelledby="trending-heading">
+                <div className="mb-8 border-b border-border pb-4">
+                  <h2 id="trending-heading" className="font-display text-2xl md:text-3xl">
+                    Trending
+                  </h2>
+                </div>
+                <ol className="space-y-0 divide-y divide-border border-y border-border">
+                  {trending.map((post, index) => (
+                    <li key={post.id} className="flex gap-5 py-5">
+                      <span
+                        data-numeric
+                        className="font-display text-2xl text-accent/80"
+                        aria-hidden="true"
                       >
-                        <span className="font-medium text-foreground group-hover:text-primary">
-                          {label}
-                        </span>
-                        <span className="mt-1 text-sm text-muted-foreground">{hint}</span>
-                      </Link>
+                        {String(index + 1).padStart(2, "0")}
+                      </span>
+                      <div>
+                        <h3 className="font-display text-lg leading-snug">
+                          <Link
+                            href={`/blog/${post.slug}`}
+                            className="transition-colors duration-150 hover:text-accent"
+                          >
+                            {post.title}
+                          </Link>
+                        </h3>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {post.author?.fullName ?? "The Blueprint Editorial Team"}
+                          <span aria-hidden="true"> · </span>
+                          {post.readingMinutes} min read
+                        </p>
+                      </div>
                     </li>
                   ))}
-                </ul>
-
-                {topicLinks.length > 0 && (
-                  <div className="mt-10">
-                    <h3 className="text-eyebrow uppercase tracking-[0.14em] text-muted-foreground">
-                      Browse by topic
-                    </h3>
-                    <ul className="mt-3 flex flex-wrap gap-2">
-                      {topicLinks.map((category) => (
-                        <li key={category.id}>
-                          <Link
-                            href={`/category/${category.slug}`}
-                            className="inline-flex min-h-9 items-center rounded-sm border border-border px-3 text-sm transition-colors duration-150 hover:border-primary hover:text-primary"
-                          >
-                            {category.name}
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
+                </ol>
               </section>
-            </div>
+            )}
 
-            <aside className="lg:sticky lg:top-24 lg:self-start">
-              <BlogSidebar />
-            </aside>
+            <section
+              className="border border-border bg-surface-sunken p-8"
+              aria-labelledby="newsletter-heading"
+            >
+              <p className="text-eyebrow uppercase tracking-[0.16em] text-accent">Newsletter</p>
+              <h2 id="newsletter-heading" className="mt-3 font-display text-2xl">
+                Stay ahead of the conversation
+              </h2>
+              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                Briefings from {SITE_NAME} on business, leadership, and the ideas shaping what
+                comes next.
+              </p>
+              <SubscribeForm source="homepage" layout="stacked" className="mt-6" />
+            </section>
           </div>
+
+          <section className="mt-20" aria-labelledby="interviews-heading">
+            <div className="mb-10 flex items-end justify-between gap-4 border-b border-border pb-4">
+              <h2 id="interviews-heading" className="font-display text-2xl md:text-3xl">
+                Featured Interviews
+              </h2>
+              <Link
+                href="/category/interviews"
+                className="inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-accent"
+              >
+                All interviews
+                <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+              </Link>
+            </div>
+            {interviews.length > 0 ? (
+              <div className="grid gap-8 md:grid-cols-3 md:gap-10">
+                {interviews.map((post) => (
+                  <PostCard key={post.id} post={post} />
+                ))}
+              </div>
+            ) : (
+              <p className="text-muted-foreground">
+                Conversations with founders, executives, and cultural leaders will appear here.
+              </p>
+            )}
+          </section>
+
+          <section className="mt-20" aria-labelledby="spotlight-heading">
+            <div className="mb-10 border-b border-border pb-4">
+              <h2 id="spotlight-heading" className="font-display text-2xl md:text-3xl">
+                Brand Spotlight
+              </h2>
+              <p className="mt-2 text-sm text-muted-foreground">Sponsored partnerships</p>
+            </div>
+            {brandSpotlights.length > 0 ? (
+              <div className="grid gap-8 md:grid-cols-2">
+                {brandSpotlights.map((promotion) => (
+                  <InFeedPromotion key={promotion.id} promotion={promotion} />
+                ))}
+              </div>
+            ) : (
+              <p className="text-muted-foreground">
+                Sponsored brand features and partner stories will appear here.
+              </p>
+            )}
+          </section>
         </div>
       </main>
 

@@ -9,10 +9,10 @@ export const dynamic = "force-dynamic";
 
 const FILTERS: { href: string; label: string; status?: CommentStatus }[] = [
   { href: "/admin/comments", label: "All" },
-  { href: "/admin/comments?status=pending", label: "Pending", status: "pending" },
-  { href: "/admin/comments?status=approved", label: "Approved", status: "approved" },
+  { href: "/admin/comments?status=approved", label: "Live", status: "approved" },
+  { href: "/admin/comments?status=rejected", label: "Hidden", status: "rejected" },
   { href: "/admin/comments?status=spam", label: "Spam", status: "spam" },
-  { href: "/admin/comments?status=rejected", label: "Rejected", status: "rejected" },
+  { href: "/admin/comments?status=pending", label: "Pending", status: "pending" },
 ];
 
 export default async function AdminCommentsPage({
@@ -29,7 +29,8 @@ export default async function AdminCommentsPage({
       <div>
         <h1 className="font-display text-3xl">Comments</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Moderate reader comments before they appear on stories.
+          Comments go live immediately. Hide, mark as spam, or delete anything that should not stay
+          on the site.
         </p>
       </div>
 
@@ -60,7 +61,7 @@ export default async function AdminCommentsPage({
           <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
             {status
               ? `Nothing marked as ${status} right now.`
-              : "When readers leave comments, they will show up here for review."}
+              : "When readers leave comments, they will show up here."}
           </p>
         </div>
       ) : (
