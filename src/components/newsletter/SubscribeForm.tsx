@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useId } from "react";
 import { useFormStatus } from "react-dom";
 import { Check } from "lucide-react";
 
@@ -41,6 +41,7 @@ export function SubscribeForm({
   submitLabel?: string;
   className?: string;
 }) {
+  const honeypotId = useId();
   const [state, formAction] = useActionState<SubscribeState, FormData>(subscribe, {
     status: "idle",
   });
@@ -71,17 +72,17 @@ export function SubscribeForm({
         tabIndex keep it away from assistive tech and keyboard users.
       */}
       <div className="absolute left-[-9999px] top-auto h-px w-px overflow-hidden" aria-hidden="true">
-        <label htmlFor="website">Leave this field empty</label>
-        <input id="website" name="website" type="text" tabIndex={-1} autoComplete="off" />
+        <label htmlFor={honeypotId}>Leave this field empty</label>
+        <input id={honeypotId} name="website" type="text" tabIndex={-1} autoComplete="off" />
       </div>
 
       {showName && (
         <div>
-          <label htmlFor="fullName" className="mb-1.5 block text-sm font-medium">
+          <label htmlFor={`fullName-${source}`} className="mb-1.5 block text-sm font-medium">
             Name <span className="font-normal text-muted-foreground">(optional)</span>
           </label>
           <input
-            id="fullName"
+            id={`fullName-${source}`}
             name="fullName"
             type="text"
             autoComplete="name"

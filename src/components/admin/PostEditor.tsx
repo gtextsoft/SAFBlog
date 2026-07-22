@@ -57,6 +57,9 @@ export function PostEditor({
   const [slug, setSlug] = useState(post?.slug ?? "");
   const [slugLocked, setSlugLocked] = useState(Boolean(post));
   const [coverImageUrl, setCoverImageUrl] = useState(post?.coverImageUrl ?? "");
+  const [faqItems, setFaqItems] = useState(
+    post?.faq?.length ? post.faq : [{ question: "", answer: "" }],
+  );
 
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
@@ -328,22 +331,60 @@ export function PostEditor({
             defaultValue={(post?.keyTakeaways ?? []).join("\n")}
             className="w-full rounded border border-input bg-background p-2 font-mono text-sm"
           />
-          <p className="mb-1.5 mt-3 text-xs font-medium">FAQ pairs</p>
-          {(post?.faq?.length ? post.faq : [{ question: "", answer: "" }]).map((item, i) => (
-            <div key={i} className="mt-2 space-y-1">
+          <div className="mb-1.5 mt-3 flex items-center justify-between gap-2">
+            <p className="text-xs font-medium">FAQ pairs</p>
+            <button
+              type="button"
+              onClick={() => {
+                setFaqItems((prev) => [...prev, { question: "", answer: "" }]);
+                markDirty();
+              }}
+              className="text-xs font-medium text-primary hover:text-primary-hover"
+            >
+              Add pair
+            </button>
+          </div>
+          {faqItems.map((item, i) => (
+            <div key={i} className="mt-2 space-y-1 rounded border border-border/60 p-2">
               <input
                 name="faqQuestion"
                 placeholder="Question"
-                defaultValue={item.question}
+                value={item.question}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setFaqItems((prev) =>
+                    prev.map((row, idx) => (idx === i ? { ...row, question: value } : row)),
+                  );
+                  markDirty();
+                }}
                 className={inputClass}
               />
               <textarea
                 name="faqAnswer"
                 placeholder="Answer"
                 rows={2}
-                defaultValue={item.answer}
+                value={item.answer}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setFaqItems((prev) =>
+                    prev.map((row, idx) => (idx === i ? { ...row, answer: value } : row)),
+                  );
+                  markDirty();
+                }}
                 className="w-full rounded border border-input bg-background p-2 text-sm"
               />
+              {faqItems.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFaqItems((prev) => prev.filter((_, idx) => idx !== i));
+                    markDirty();
+                  }}
+                  className="text-xs text-destructive"
+                >
+                  Remove
+                </button>
+              )}
             </div>
           ))}
         </div>

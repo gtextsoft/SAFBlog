@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { SubscribeForm } from "@/components/newsletter/SubscribeForm";
 import { FooterPromotion } from "@/components/promotions/PromotionSlot";
-import { NAV_ITEMS } from "@/components/site/SiteHeader";
+import { PRIMARY_NAV, TOPIC_NAV } from "@/components/site/SiteHeader";
 import type { Promotion } from "@/lib/types/promotion";
 import { CONTACT_EMAIL, SITE_NAME, SITE_TAGLINE, SOCIAL_PROFILES } from "@/lib/seo/site";
 
@@ -16,10 +16,9 @@ export function SiteFooter({ promotion = null }: { promotion?: Promotion | null 
   const year = new Date().getFullYear();
 
   const explore = [
-    { href: "/blog", label: "Latest Articles" },
-    { href: "/newsletter", label: "Newsletter" },
-    ...NAV_ITEMS.filter((item) => item.href !== "/"),
+    ...PRIMARY_NAV,
     { href: "/search", label: "Search" },
+    ...TOPIC_NAV,
   ];
 
   return (
@@ -98,12 +97,26 @@ export function SiteFooter({ promotion = null }: { promotion?: Promotion | null 
           <p>
             © {year} {SITE_NAME}. All rights reserved.
           </p>
-          <Link
-            href="/feed.xml"
-            className="inline-flex min-h-11 items-center transition-colors duration-150 hover:text-foreground"
-          >
-            RSS
-          </Link>
+          <nav aria-label="Legal and feeds" className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            <Link
+              href="/privacy"
+              className="inline-flex min-h-11 items-center transition-colors duration-150 hover:text-foreground"
+            >
+              Privacy
+            </Link>
+            <Link
+              href="/terms"
+              className="inline-flex min-h-11 items-center transition-colors duration-150 hover:text-foreground"
+            >
+              Terms
+            </Link>
+            <Link
+              href="/feed.xml"
+              className="inline-flex min-h-11 items-center transition-colors duration-150 hover:text-foreground"
+            >
+              RSS
+            </Link>
+          </nav>
         </div>
       </div>
     </footer>

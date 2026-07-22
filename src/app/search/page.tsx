@@ -37,8 +37,8 @@ export async function generateMetadata({
     : "Search";
 
   const description = query
-    ? `Stories matching “${query}” from the ${SITE_NAME} — reporting on education, sustainable development and community empowerment.`
-    : `Search the ${SITE_NAME} archive for stories on education, sustainable development and community empowerment across Nigeria and beyond.`;
+    ? `Stories matching “${query}” from ${SITE_NAME} — business, leadership, innovation, and impact.`
+    : `Search the ${SITE_NAME} archive for stories on business, leadership, innovation, and impact.`;
 
   return {
     title,
@@ -100,23 +100,36 @@ export default async function SearchPage({
               Find articles by title or excerpt across the {SITE_NAME} archive.
             </p>
 
-            <form action="/search" method="get" className="relative mt-8 max-w-xl" role="search">
-              <label htmlFor="search-q" className="sr-only">
-                Search stories
-              </label>
-              <Search
-                className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-                aria-hidden="true"
-              />
-              <input
-                id="search-q"
-                name="q"
-                type="search"
-                defaultValue={query}
-                placeholder="Search stories…"
-                autoComplete="off"
-                className="h-12 w-full rounded border border-border bg-background pl-10 pr-4 text-base outline-none ring-offset-background transition-shadow focus-visible:ring-2 focus-visible:ring-ring"
-              />
+            <form
+              action="/search"
+              method="get"
+              className="mt-8 flex max-w-xl flex-col gap-2 sm:flex-row"
+              role="search"
+            >
+              <div className="relative min-w-0 flex-1">
+                <label htmlFor="search-q" className="sr-only">
+                  Search stories
+                </label>
+                <Search
+                  className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                  aria-hidden="true"
+                />
+                <input
+                  id="search-q"
+                  name="q"
+                  type="search"
+                  defaultValue={query}
+                  placeholder="Search stories…"
+                  autoComplete="off"
+                  className="h-12 w-full rounded border border-border bg-background pl-10 pr-4 text-base outline-none ring-offset-background transition-shadow focus-visible:ring-2 focus-visible:ring-ring"
+                />
+              </div>
+              <button
+                type="submit"
+                className="inline-flex h-12 shrink-0 items-center justify-center rounded bg-primary px-5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
+              >
+                Search
+              </button>
             </form>
           </div>
         </div>

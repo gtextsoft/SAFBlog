@@ -1,12 +1,22 @@
 import Link from "next/link";
+import { Search } from "lucide-react";
 
 import { MobileNav } from "@/components/site/MobileNav";
 import { NavLinks } from "@/components/site/NavLinks";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { SITE_NAME, SITE_TAGLINE } from "@/lib/seo/site";
 
-export const NAV_ITEMS = [
-  { href: "/", label: "Home" },
+/** Primary destinations — discovery, not topic taxonomy. */
+export const PRIMARY_NAV = [
+  { href: "/blog", label: "Articles" },
+  { href: "/newsletter", label: "Newsletter" },
+  { href: "/about", label: "About" },
+  { href: "/contact", label: "Contact" },
+  { href: "/donate", label: "Donate" },
+];
+
+/** Topic taxonomy — secondary row on desktop; grouped under Topics on mobile. */
+export const TOPIC_NAV = [
   { href: "/category/business", label: "Business" },
   { href: "/category/entrepreneurship", label: "Entrepreneurship" },
   { href: "/category/real-estate", label: "Real Estate" },
@@ -15,9 +25,10 @@ export const NAV_ITEMS = [
   { href: "/category/lifestyle", label: "Lifestyle" },
   { href: "/category/interviews", label: "Interviews" },
   { href: "/category/brand-spotlight", label: "Brand Spotlight" },
-  { href: "/about", label: "About" },
-  { href: "/contact", label: "Contact" },
 ];
+
+/** @deprecated Prefer PRIMARY_NAV + TOPIC_NAV. Kept for footer explore links. */
+export const NAV_ITEMS = [...PRIMARY_NAV, ...TOPIC_NAV];
 
 /**
  * Site masthead.
@@ -43,14 +54,32 @@ export function SiteHeader() {
             </span>
           </Link>
 
-          <div className="ml-auto flex items-center gap-2">
+          <nav
+            aria-label="Primary"
+            className="ml-6 hidden items-center gap-0.5 lg:flex"
+          >
+            <NavLinks items={PRIMARY_NAV} className="flex" />
+          </nav>
+
+          <div className="ml-auto flex items-center gap-1 sm:gap-2">
+            <Link
+              href="/search"
+              className="inline-flex h-11 w-11 items-center justify-center rounded text-muted-foreground transition-colors duration-150 hover:text-foreground"
+              aria-label="Search stories"
+            >
+              <Search className="h-4 w-4" aria-hidden="true" />
+            </Link>
             <ThemeToggle />
-            <MobileNav items={NAV_ITEMS} />
+            <MobileNav primary={PRIMARY_NAV} topics={TOPIC_NAV} />
           </div>
         </div>
 
         <div className="hidden border-t border-border py-1 lg:block">
-          <NavLinks items={NAV_ITEMS} className="flex flex-wrap justify-center gap-x-0.5" />
+          <NavLinks
+            items={TOPIC_NAV}
+            ariaLabel="Topics"
+            className="flex flex-wrap justify-center gap-x-0.5"
+          />
         </div>
       </div>
     </header>

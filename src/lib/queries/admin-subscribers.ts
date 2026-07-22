@@ -24,17 +24,24 @@ export const SUBSCRIBERS_PER_PAGE = 50;
 export async function listSubscribers(
   page = 1,
   perPage = SUBSCRIBERS_PER_PAGE,
+  status?: AdminSubscriber["status"],
 ): Promise<{ items: AdminSubscriber[]; total: number; totalPages: number; page: number }> {
   const supabase = await createClient();
   const from = (page - 1) * perPage;
 
-  const { data, error, count } = await supabase
+  let query = supabase
     .from("newsletter_subscribers")
     .select("id, email, full_name, status, source, created_at, unsubscribed_at", {
       count: "exact",
     })
     .order("created_at", { ascending: false })
     .range(from, from + perPage - 1);
+
+  if (status) {
+    query = query.eq("status", status);
+  }
+
+  const { data, error, count } = await query;
 
   if (error) {
     console.error("listSubscribers", { message: error.message });

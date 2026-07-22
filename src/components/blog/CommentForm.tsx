@@ -1,7 +1,8 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 import { useFormStatus } from "react-dom";
+import { useRouter } from "next/navigation";
 import { Check } from "lucide-react";
 
 import { submitComment, type CommentState } from "@/app/blog/[slug]/comments-actions";
@@ -29,9 +30,16 @@ export function CommentForm({
   postSlug: string;
   className?: string;
 }) {
+  const router = useRouter();
   const [state, formAction] = useActionState<CommentState, FormData>(submitComment, {
     status: "idle",
   });
+
+  useEffect(() => {
+    if (state.status === "success") {
+      router.refresh();
+    }
+  }, [state.status, router]);
 
   if (state.status === "success") {
     return (

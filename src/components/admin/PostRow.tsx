@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Eye, Pencil, Send, Trash2, Undo2 } from "lucide-react";
 
@@ -9,15 +10,31 @@ import type { AdminPostListItem } from "@/lib/queries/admin-posts";
 import { cn } from "@/lib/utils";
 
 export function PostRow({ post }: { post: AdminPostListItem }) {
+  const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [error, setError] = useState("");
 
   const published = post.status === "published";
+  const scheduled = post.status === "scheduled";
   const date = new Date(post.updatedAt).toLocaleDateString("en-NG", {
     day: "numeric",
     month: "short",
     year: "numeric",
   });
+
+  function run(action: () => Promise<{ ok: true } | { ok: false; error: string }>) {
+    setError("");
+    startTransition(async () => {
+      const result = await action();
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      setConfirmingDelete(false);
+      router.refresh();
+    });
+  }
 
   return (
     <li
@@ -32,9 +49,9 @@ export function PostRow({ post }: { post: AdminPostListItem }) {
             <span
               className={cn(
                 "rounded-sm border px-1.5 py-0.5 text-[11px] font-medium uppercase tracking-wide",
-                published
-                  ? "border-success/40 bg-success/10 text-success"
-                  : "border-border bg-muted text-muted-foreground",
+                published && "border-success/40 bg-success/10 text-success",
+                scheduled && "border-amber-500/40 bg-amber-500/10 text-amber-800 dark:text-amber-300",
+                !published && !scheduled && "border-border bg-muted text-muted-foreground",
               )}
             >
               {post.status}
@@ -56,23 +73,45 @@ export function PostRow({ post }: { post: AdminPostListItem }) {
         </div>
 
         <div className="flex shrink-0 items-center gap-1">
-          <button
-            type="button"
-            disabled={pending}
-            onClick={() =>
-              startTransition(() => setPostStatus(post.id, published ? "draft" : "published"))
-            }
-            className="inline-flex h-11 w-11 items-center justify-center rounded text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground"
-          >
-            {published ? (
-              <Undo2 className="h-4 w-4" aria-hidden="true" />
-            ) : (
+          {!scheduled && (
+            <button
+              type="button"
+              disabled={pending}
+              onClick={() => run(() => setPostStatus(post.id, published ? "draft" : "published"))}
+              className="inline-flex h-11 w-11 items-center justify-center rounded text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground"
+            >
+              {published ? (
+                <Undo2 className="h-4 w-4" aria-hidden="true" />
+              ) : (
+                <Send className="h-4 w-4" aria-hidden="true" />
+              )}
+              <span className="sr-only">
+                {published ? `Unpublish ${post.title}` : `Publish ${post.title}`}
+              </span>
+            </button>
+          )}
+
+          {scheduled && (
+            <button
+              type="button"
+              disabled={pending}
+              title="Publish now (skips the schedule)"
+              onClick={() => {
+                if (
+                  !window.confirm(
+                    `Publish “${post.title}” now? This will ignore the scheduled time.`,
+                  )
+                ) {
+                  return;
+                }
+                run(() => setPostStatus(post.id, "published"));
+              }}
+              className="inline-flex h-11 w-11 items-center justify-center rounded text-amber-700 transition-colors duration-150 hover:bg-amber-500/10 dark:text-amber-400"
+            >
               <Send className="h-4 w-4" aria-hidden="true" />
-            )}
-            <span className="sr-only">
-              {published ? `Unpublish ${post.title}` : `Publish ${post.title}`}
-            </span>
-          </button>
+              <span className="sr-only">Publish {post.title} now</span>
+            </button>
+          )}
 
           {published && (
             <Link
@@ -105,6 +144,12 @@ export function PostRow({ post }: { post: AdminPostListItem }) {
         </div>
       </div>
 
+      {error && (
+        <p role="alert" className="mt-3 text-sm text-destructive">
+          {error}
+        </p>
+      )}
+
       {confirmingDelete && (
         <div
           role="alertdialog"
@@ -125,7 +170,7 @@ export function PostRow({ post }: { post: AdminPostListItem }) {
           <button
             type="button"
             disabled={pending}
-            onClick={() => startTransition(() => deletePost(post.id))}
+            onClick={() => run(() => deletePost(post.id))}
             className="inline-flex min-h-11 items-center rounded bg-destructive px-3 text-sm font-medium text-destructive-foreground disabled:opacity-60"
           >
             {pending ? "Deleting…" : "Delete"}

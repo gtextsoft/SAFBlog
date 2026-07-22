@@ -29,8 +29,8 @@ export default async function AdminCommentsPage({
       <div>
         <h1 className="font-display text-3xl">Comments</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Comments go live immediately. Hide, mark as spam, or delete anything that should not stay
-          on the site.
+          Comments go live immediately. Use <strong>Hide from site</strong> or{" "}
+          <strong>Mark as spam</strong> to remove anything that should not stay public.
         </p>
       </div>
 

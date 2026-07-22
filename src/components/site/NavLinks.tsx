@@ -15,17 +15,22 @@ export function NavLinks({
   items,
   className,
   onNavigate,
+  ariaLabel = "Main",
 }: {
   items: { href: string; label: string }[];
   className?: string;
   onNavigate?: () => void;
+  ariaLabel?: string;
 }) {
   const pathname = usePathname();
 
   return (
-    <nav aria-label="Main" className={cn("items-center gap-1", className)}>
+    <nav aria-label={ariaLabel} className={cn("items-center gap-1", className)}>
       {items.map(({ href, label }) => {
-        const active = pathname === href || pathname.startsWith(`${href}/`);
+        const active =
+          href === "/"
+            ? pathname === "/"
+            : pathname === href || pathname.startsWith(`${href}/`);
 
         return (
           <Link

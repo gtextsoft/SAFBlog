@@ -14,6 +14,8 @@ export interface CommentState {
   fieldErrors?: Record<string, string>;
 }
 
+export type CommentActionResult = { ok: true } | { ok: false; error: string };
+
 const CommentSchema = z.object({
   postId: z.string().uuid(),
   postSlug: z.string().min(1).max(200),
@@ -23,14 +25,22 @@ const CommentSchema = z.object({
   website: z.string().max(0).optional().or(z.literal("")),
 });
 
+/** Reject obvious link spam while keeping live comments for real readers. */
+function looksLikeLinkSpam(body: string): boolean {
+  const urls = body.match(/https?:\/\/|www\./gi) ?? [];
+  return urls.length >= 3;
+}
+
 export async function submitComment(
   _prev: CommentState,
   formData: FormData,
 ): Promise<CommentState> {
   const hdrs = await headers();
   const ip = clientIpFromHeaders(hdrs);
-  const limited = rateLimit(`comment:${ip}`, { limit: 6, windowMs: 60_000 });
-  if (!limited.ok) {
+
+  // Soft per-isolate limits: tighter than before; also keyed by email after parse.
+  const ipLimited = rateLimit(`comment:ip:${ip}`, { limit: 3, windowMs: 60_000 });
+  if (!ipLimited.ok) {
     return {
       status: "error",
       message: "Too many comments. Please wait a minute and try again.",
@@ -67,6 +77,24 @@ export async function submitComment(
     };
   }
 
+  const emailLimited = rateLimit(`comment:email:${authorEmail}`, {
+    limit: 3,
+    windowMs: 10 * 60_000,
+  });
+  if (!emailLimited.ok) {
+    return {
+      status: "error",
+      message: "Too many comments from this email. Please try again later.",
+    };
+  }
+
+  if (looksLikeLinkSpam(body)) {
+    return {
+      status: "error",
+      message: "Please remove extra links from your comment and try again.",
+    };
+  }
+
   const supabase = createPublicClient();
   const { error } = await supabase.from("comments").insert({
     post_id: postId,
@@ -94,30 +122,31 @@ export async function submitComment(
 export async function setCommentStatus(
   id: string,
   status: "approved" | "rejected" | "spam" | "pending",
-) {
+): Promise<CommentActionResult> {
   const { supabase } = await requireRole("admin", "editor");
 
   const { error } = await supabase.from("comments").update({ status }).eq("id", id);
   if (error) {
     console.error("setCommentStatus", error.message);
-    return;
+    return { ok: false, error: "Could not update that comment. Try again." };
   }
 
   revalidatePath("/admin/comments");
-  // Public article pages only show approved comments.
   revalidatePath("/blog", "layout");
+  return { ok: true };
 }
 
 /** Permanently remove a comment. */
-export async function deleteComment(id: string) {
+export async function deleteComment(id: string): Promise<CommentActionResult> {
   const { supabase } = await requireRole("admin", "editor");
 
   const { error } = await supabase.from("comments").delete().eq("id", id);
   if (error) {
     console.error("deleteComment", error.message);
-    return;
+    return { ok: false, error: "Could not delete that comment. Try again." };
   }
 
   revalidatePath("/admin/comments");
   revalidatePath("/blog", "layout");
+  return { ok: true };
 }

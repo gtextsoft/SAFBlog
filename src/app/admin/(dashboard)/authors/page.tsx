@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { deleteAuthor } from "@/app/admin/(dashboard)/authors/actions";
+import { AuthorDeleteButton } from "@/app/admin/(dashboard)/authors/AuthorDeleteButton";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -40,23 +40,14 @@ export default async function AdminAuthorsPage() {
                   {a.role ? ` · ${a.role}` : ""}
                 </p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 <Link
                   href={`/admin/authors/${a.id}`}
                   className="text-sm text-primary underline-offset-2 hover:underline"
                 >
                   Edit
                 </Link>
-                <form
-                  action={async () => {
-                    "use server";
-                    await deleteAuthor(a.id);
-                  }}
-                >
-                  <button type="submit" className="text-sm text-destructive">
-                    Delete
-                  </button>
-                </form>
+                <AuthorDeleteButton id={a.id} name={a.full_name} />
               </div>
             </li>
           ))

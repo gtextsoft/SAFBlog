@@ -17,8 +17,8 @@ export default function DonateSuccessPage() {
         <p className="text-eyebrow uppercase tracking-[0.14em] text-primary">Donation</p>
         <h1 className="mt-3 text-4xl md:text-5xl">Thank you</h1>
         <p className="mt-4 text-lg text-muted-foreground">
-          Your support helps us keep education and community programmes running. A receipt will
-          arrive by email from Stripe.
+          Your gift helps sustain independent editorial storytelling at The Blueprint. A receipt
+          will arrive by email from Stripe.
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <Link

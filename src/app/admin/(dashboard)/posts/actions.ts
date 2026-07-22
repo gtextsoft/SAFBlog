@@ -313,7 +313,7 @@ export async function updatePost(
   redirect(`/admin/posts?saved=1`);
 }
 
-export async function deletePost(id: string): Promise<void> {
+export async function deletePost(id: string): Promise<{ ok: true } | { ok: false; error: string }> {
   const supabase = await requireAdmin();
 
   const { data: post } = await supabase.from("posts").select("slug").eq("id", id).maybeSingle();
@@ -321,13 +321,17 @@ export async function deletePost(id: string): Promise<void> {
   const { error } = await supabase.from("posts").delete().eq("id", id);
   if (error) {
     console.error("deletePost", { id, message: error.message });
-    return;
+    return { ok: false, error: "Could not delete that post. Try again." };
   }
 
   if (post?.slug) revalidatePost(post.slug);
+  return { ok: true };
 }
 
-export async function setPostStatus(id: string, status: "draft" | "published"): Promise<void> {
+export async function setPostStatus(
+  id: string,
+  status: "draft" | "published",
+): Promise<{ ok: true } | { ok: false; error: string }> {
   const supabase = await requireAdmin();
 
   const { data: existing } = await supabase
@@ -344,15 +348,17 @@ export async function setPostStatus(id: string, status: "draft" | "published"): 
         status === "published"
           ? (existing?.published_at ?? new Date().toISOString())
           : existing?.published_at ?? null,
+      scheduled_at: null,
     })
     .eq("id", id);
 
   if (error) {
     console.error("setPostStatus", { id, message: error.message });
-    return;
+    return { ok: false, error: "Could not update post status. Try again." };
   }
 
   if (existing?.slug) revalidatePost(existing.slug);
+  return { ok: true };
 }
 
 export async function createAuthor(fullName: string): Promise<{ error?: string; id?: string }> {

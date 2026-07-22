@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 
 import { deleteComment, setCommentStatus } from "@/app/blog/[slug]/comments-actions";
 import type { Comment } from "@/lib/queries/comments";
@@ -8,11 +8,20 @@ import { cn } from "@/lib/utils";
 
 export function CommentModerationRow({ comment }: { comment: Comment }) {
   const [pending, startTransition] = useTransition();
+  const [error, setError] = useState("");
   const date = new Date(comment.createdAt).toLocaleDateString("en-NG", {
     day: "numeric",
     month: "short",
     year: "numeric",
   });
+
+  function run(action: () => Promise<{ ok: true } | { ok: false; error: string }>) {
+    setError("");
+    startTransition(async () => {
+      const result = await action();
+      if (!result.ok) setError(result.error);
+    });
+  }
 
   return (
     <li
@@ -43,35 +52,41 @@ export function CommentModerationRow({ comment }: { comment: Comment }) {
       </p>
       <p className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">{comment.body}</p>
 
+      {error && (
+        <p role="alert" className="mt-3 text-sm text-destructive">
+          {error}
+        </p>
+      )}
+
       <div className="mt-4 flex flex-wrap gap-2">
         {comment.status !== "approved" && (
           <button
             type="button"
             disabled={pending}
-            onClick={() => startTransition(() => setCommentStatus(comment.id, "approved"))}
+            onClick={() => run(() => setCommentStatus(comment.id, "approved"))}
             className="inline-flex min-h-9 items-center rounded border border-border px-3 text-xs font-medium hover:border-rule-strong"
           >
-            Show
+            Show on site
           </button>
         )}
         {comment.status !== "rejected" && (
           <button
             type="button"
             disabled={pending}
-            onClick={() => startTransition(() => setCommentStatus(comment.id, "rejected"))}
+            onClick={() => run(() => setCommentStatus(comment.id, "rejected"))}
             className="inline-flex min-h-9 items-center rounded border border-border px-3 text-xs font-medium hover:border-rule-strong"
           >
-            Hide
+            Hide from site
           </button>
         )}
         {comment.status !== "spam" && (
           <button
             type="button"
             disabled={pending}
-            onClick={() => startTransition(() => setCommentStatus(comment.id, "spam"))}
+            onClick={() => run(() => setCommentStatus(comment.id, "spam"))}
             className="inline-flex min-h-9 items-center rounded border border-border px-3 text-xs font-medium text-destructive hover:border-destructive/40"
           >
-            Spam
+            Mark as spam
           </button>
         )}
         <button
@@ -79,7 +94,7 @@ export function CommentModerationRow({ comment }: { comment: Comment }) {
           disabled={pending}
           onClick={() => {
             if (!window.confirm("Delete this comment permanently?")) return;
-            startTransition(() => deleteComment(comment.id));
+            run(() => deleteComment(comment.id));
           }}
           className="inline-flex min-h-9 items-center rounded border border-destructive/40 px-3 text-xs font-medium text-destructive hover:bg-destructive/5"
         >
