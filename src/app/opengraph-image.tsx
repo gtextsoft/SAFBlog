@@ -48,8 +48,8 @@ export default function OpengraphImage() {
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-          <div style={{ display: "flex", fontSize: 68, lineHeight: 1.12, letterSpacing: -1.5 }}>
-            {SITE_TAGLINE}, one story at a time.
+          <div style={{ display: "flex", fontSize: 58, lineHeight: 1.12, letterSpacing: -1.5 }}>
+            Stories of education, empowerment, and lasting change
           </div>
           <div
             style={{

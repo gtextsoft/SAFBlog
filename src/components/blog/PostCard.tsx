@@ -109,16 +109,18 @@ export function FeaturedPostCard({ post }: { post: PostSummary }) {
       )}
 
       <div className="flex flex-col justify-center">
-        <p className="text-eyebrow uppercase tracking-[0.14em] text-primary">Featured</p>
-
-        <h2 className="mt-3 text-3xl leading-tight md:text-4xl">
+        {/*
+          h3 under the page's "Featured story" h2 — keeps a single clear
+          outline (h1 → h2 sections → h3 post titles) for crawlers and a11y.
+        */}
+        <h3 className="font-display text-3xl leading-tight md:text-4xl">
           <Link
             href={`/blog/${post.slug}`}
             className="transition-colors duration-150 hover:text-primary"
           >
             {post.title}
           </Link>
-        </h2>
+        </h3>
 
         {post.excerpt && (
           <p className="mt-3 text-base text-muted-foreground md:text-lg">{post.excerpt}</p>

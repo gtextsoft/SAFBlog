@@ -12,10 +12,11 @@ export const SITE_URL =
 
 export const SITE_NAME = "Stephen Akintayo Foundation";
 
-export const SITE_TAGLINE = "Empowering Communities";
+export const SITE_TAGLINE = "Stories of Education & Community Empowerment";
 
+/** Keep ~120–155 characters so SERP snippets and SEO audits accept it. */
 export const SITE_DESCRIPTION =
-  "Stories of impact, insights on development, and updates from the Stephen Akintayo Foundation — creating lasting change through education, sustainable development, and community empowerment.";
+  "Field reporting from the Stephen Akintayo Foundation on education, sustainable development, and community empowerment across Nigeria and beyond.";
 
 export const SITE_LOCALE = "en_NG";
 

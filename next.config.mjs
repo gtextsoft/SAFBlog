@@ -6,6 +6,9 @@ const supabaseHost = process.env.NEXT_PUBLIC_SUPABASE_URL
 const nextConfig = {
   reactStrictMode: true,
 
+  // Do not advertise the stack in HTTP headers (Seobility / security scanners).
+  poweredByHeader: false,
+
   // TipTap HTML (and rare data-URL images) can exceed the default 1 MB Server Action limit.
   experimental: {
     serverActions: {
